@@ -58,13 +58,19 @@ async def create_booking(
 
     time_str = f"{data.start_time.strftime('%m/%d %H:%M')}"
     await create_notification(db, user_id, "booking_pending",
-        "预约已提交", f"您的仪器预约（{time_str}）已提交，等待管理员审批", booking.id)
+        "预约已提交", f"您的仪器预约（{time_str}）已提交，等待审批", booking.id)
 
-    admin_result = await db.execute(select(User).where(User.role == "admin"))
-    for admin in admin_result.scalars().all():
-        if str(admin.id) != str(user_id):
-            await create_notification(db, admin.id, "booking_pending",
-                "新预约待审批", f"用户提交了新的预约申请（{time_str}）", booking.id)
+    notify_ids = set()
+    if data.reviewer_id and str(data.reviewer_id) != str(user_id):
+        notify_ids.add(str(data.reviewer_id))
+    if not notify_ids:
+        admin_result = await db.execute(select(User).where(User.role == "admin"))
+        for admin in admin_result.scalars().all():
+            if str(admin.id) != str(user_id):
+                notify_ids.add(str(admin.id))
+    for nid in notify_ids:
+        await create_notification(db, uuid.UUID(nid), "booking_pending",
+            "新预约待审批", f"用户提交了新的预约申请（{time_str}）", booking.id)
 
     return booking
 
@@ -308,6 +314,9 @@ async def admin_create_booking(db: AsyncSession, data) -> Booking:
     time_str = f"{data.start_time.strftime('%m/%d %H:%M')}"
     await create_notification(db, user_id, "booking_pending",
         "管理员代预约", f"管理员为您预约了仪器（{time_str}），等待审批", booking.id)
+    if data.reviewer_id and str(data.reviewer_id) != str(user_id):
+        await create_notification(db, uuid.UUID(data.reviewer_id), "booking_pending",
+            "新预约待审批", f"管理员为您分配了新的预约审批（{time_str}）", booking.id)
     return booking
 
 
