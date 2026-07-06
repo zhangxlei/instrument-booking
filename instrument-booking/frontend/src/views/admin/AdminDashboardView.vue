@@ -3,6 +3,7 @@
     <h2>仪表盘</h2>
     <LoadingSpinner v-if="loading" text="加载中..." />
     <StatsCards v-else :stats="stats" @navigate="goTo" />
+    <DashboardCharts />
   </div>
 </template>
 
@@ -10,6 +11,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getDashboardStats } from '../../api/admin'
+import DashboardCharts from '../../components/admin/DashboardCharts.vue'
 import LoadingSpinner from '../../components/common/LoadingSpinner.vue'
 import StatsCards from '../../components/admin/StatsCards.vue'
 

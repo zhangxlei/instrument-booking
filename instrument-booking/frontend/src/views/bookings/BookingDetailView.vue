@@ -11,10 +11,17 @@
         <StatusBadge :status="booking.status" />
       </div>
 
+      <div class="detail-section">
+        <h3>审批流程</h3>
+        <BookingFlowStatus :status="booking.status" :review="review" />
+      </div>
+
       <div class="detail-info">
         <div class="info-row"><span class="label">时间</span><span>{{ formatTime(booking.start_time) }} ~ {{ formatTime(booking.end_time) }}</span></div>
         <div class="info-row"><span class="label">目的</span><span>{{ booking.purpose || '-' }}</span></div>
         <div class="info-row"><span class="label">备注</span><span>{{ booking.notes || '-' }}</span></div>
+        <div v-if="booking.message" class="info-row"><span class="label">捎话</span><span>{{ booking.message }}</span></div>
+        <div v-if="booking.probe_type" class="info-row"><span class="label">探针类型</span><span>{{ booking.probe_type }}</span></div>
         <div v-if="booking.rejection_reason" class="info-row"><span class="label">拒绝原因</span><span class="reject">{{ booking.rejection_reason }}</span></div>
       </div>
 
@@ -47,10 +54,13 @@ import { getBooking, cancelBooking, type BookingRead } from '../../api/bookings'
 import LoadingSpinner from '../../components/common/LoadingSpinner.vue'
 import StatusBadge from '../../components/common/StatusBadge.vue'
 import ConfirmDialog from '../../components/common/ConfirmDialog.vue'
+import BookingFlowStatus from '../../components/bookings/BookingFlowStatus.vue'
+import client from '../../api/client'
 
 const route = useRoute()
 const router = useRouter()
 const booking = ref<BookingRead | null>(null)
+const review = ref<{ status: string; reviewer_id?: string | null; tester_id?: string | null; reviewer_comment?: string | null } | null>(null)
 const loading = ref(true)
 const error = ref<string | null>(null)
 const showCancelConfirm = ref(false)
@@ -71,6 +81,10 @@ async function handleCancel() {
 onMounted(async () => {
   try {
     booking.value = await getBooking(route.params.id as string)
+    try {
+      const res = await client.get(`/booking-reviews/${route.params.id}`)
+      review.value = res.data
+    } catch {}
   } catch { error.value = '加载失败' }
   finally { loading.value = false }
 })
@@ -86,6 +100,8 @@ onMounted(async () => {
 .info-row { font-size: 14px; color: #475569; }
 .label { color: #94a3b8; margin-right: 8px; }
 .reject { color: #dc2626; }
+.detail-section { margin-bottom: 16px; }
+.detail-section h3 { font-size: 14px; color: #475569; margin: 0 0 8px; }
 .actions { margin-top: 20px; padding-top: 16px; border-top: 1px solid #f1f5f9; }
 .btn-cancel { padding: 8px 20px; border: 1px solid #fecaca; color: #dc2626; background: white; border-radius: 6px; cursor: pointer; font-size: 14px; }
 .error-msg { text-align: center; color: #dc2626; padding: 48px; }

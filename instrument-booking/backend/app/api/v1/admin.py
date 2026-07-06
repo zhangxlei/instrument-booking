@@ -88,6 +88,45 @@ async def dashboard_stats(
     }
 
 
+@router.get("/dashboard/charts")
+async def dashboard_charts(
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_admin),
+):
+    from app.models.booking import Booking
+    from collections import Counter
+
+    booking_result = await db.execute(
+        select(Booking).where(Booking.status.in_(["approved", "completed", "pending"]))
+    )
+    bookings = booking_result.scalars().all()
+
+    inst_ids = [b.instrument_id for b in bookings]
+    inst_result = await db.execute(
+        select(Instrument).where(Instrument.id.in_(set(inst_ids)))
+    )
+    inst_map = {i.id: i.name for i in inst_result.scalars().all()}
+
+    instrument_usage = Counter()
+    for bid in inst_ids:
+        instrument_usage[inst_map.get(bid, "未知")] += 1
+
+    user_ids = [b.user_id for b in bookings]
+    user_result = await db.execute(
+        select(User).where(User.id.in_(set(user_ids)))
+    )
+    user_map = {u.id: f"{u.full_name}({u.username})" for u in user_result.scalars().all()}
+
+    user_distribution = Counter()
+    for uid in user_ids:
+        user_distribution[user_map.get(uid, "未知")] += 1
+
+    return {
+        "instrument_usage": [{"name": k, "count": v} for k, v in instrument_usage.most_common(10)],
+        "user_distribution": [{"name": k, "count": v} for k, v in user_distribution.most_common(10)],
+    }
+
+
 class MaintenanceCreate(BaseModel):
     instrument_id: str
     start_time: datetime
