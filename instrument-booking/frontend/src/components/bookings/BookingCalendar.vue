@@ -56,6 +56,10 @@
             <option v-for="u in userList" :key="u.id" :value="u.id">{{ u.full_name }}({{ u.username }})</option>
           </select>
         </div>
+        <div class="form-group">
+          <label>测试需求文档（选填）</label>
+          <input type="file" ref="docInput" @change="onDocSelect" accept=".pdf,.doc,.docx,.txt,.zip" />
+        </div>
         <ErrorAlert :message="error" />
         <div class="form-actions">
           <button class="btn-cancel" @click="clearSelection">取消选择</button>
@@ -74,6 +78,12 @@ import { getAvailability } from '../../api/instruments'
 import { createBooking } from '../../api/bookings'
 import client from '../../api/client'
 import ErrorAlert from '../common/ErrorAlert.vue'
+
+interface UserItem {
+  id: string
+  username: string
+  full_name: string
+}
 
 const props = defineProps<{
   instrumentId: string
@@ -101,7 +111,8 @@ const selectedSlots = ref<{ date: string; hour: number }[]>([])
 const purpose = ref('')
 const message = ref('')
 const reviewerId = ref('')
-const userList = ref<{ id: string; username: string; full_name: string }[]>([])
+const userList = ref<UserItem[]>([])
+const docFile = ref<File | null>(null)
 const submitting = ref(false)
 const error = ref<string | null>(null)
 const shiftAnchor = ref<{ date: string; hour: number } | null>(null)
@@ -287,6 +298,12 @@ function clearSelection() {
   purpose.value = ''
   message.value = ''
   reviewerId.value = ''
+  docFile.value = null
+}
+
+function onDocSelect(e: Event) {
+  const target = e.target as HTMLInputElement
+  docFile.value = target.files?.[0] || null
 }
 
 async function handleSubmit() {
@@ -294,7 +311,7 @@ async function handleSubmit() {
   error.value = null
   submitting.value = true
   try {
-    await createBooking({
+    const booking = await createBooking({
       instrument_id: props.instrumentId,
       start_time: selectedRange.value.start,
       end_time: selectedRange.value.end,
@@ -302,6 +319,13 @@ async function handleSubmit() {
       message: message.value || undefined,
       reviewer_id: reviewerId.value || undefined,
     })
+    if (docFile.value && booking.id) {
+      const formData = new FormData()
+      formData.append('file', docFile.value)
+      await client.post(`/bookings/${booking.id}/documents`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+    }
     clearSelection()
     emit('saved')
   } catch (e: any) {
