@@ -12,6 +12,9 @@
     <router-link to="/admin/bookings" class="sidebar-item" active-class="active">
       预约管理
     </router-link>
+    <router-link to="/admin/documents" class="sidebar-item" active-class="active">
+      通知文档
+    </router-link>
     <router-link to="/admin/users" class="sidebar-item" active-class="active">
       用户管理
     </router-link>
