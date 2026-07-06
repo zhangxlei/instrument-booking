@@ -16,24 +16,21 @@
       <thead>
         <tr>
           <th>名称</th>
+          <th>管理</th>
           <th>位置</th>
           <th>状态</th>
           <th>价格</th>
-          <th>操作</th>
         </tr>
       </thead>
       <tbody>
         <tr v-for="item in instruments" :key="item.id" class="clickable-row" @click="$router.push(`/admin/instruments/${item.id}/edit`)">
           <td>{{ item.name }}</td>
+          <td>{{ item.manager_name || '-' }}</td>
           <td>{{ item.location || '-' }}</td>
           <td>
             <span class="status-badge" :class="item.status">{{ statusMap[item.status] }}</span>
           </td>
           <td>{{ item.price_per_hour ? '¥' + item.price_per_hour + '/小时' : '-' }}</td>
-          <td class="actions" @click.stop>
-            <button class="btn-edit" @click="$router.push(`/admin/instruments/${item.id}/edit`)">编辑</button>
-            <button class="btn-delete" @click="handleDelete(item.id)">删除</button>
-          </td>
         </tr>
       </tbody>
     </table>
@@ -42,7 +39,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { getInstruments, deleteInstrument, type InstrumentRead } from '../../api/instruments'
+import { getInstruments, type InstrumentRead } from '../../api/instruments'
 import { exportInstrumentsExcel } from '../../api/admin'
 import LoadingSpinner from '../../components/common/LoadingSpinner.vue'
 import EmptyState from '../../components/common/EmptyState.vue'
@@ -70,14 +67,6 @@ async function handleExport() {
   } catch (e: any) {
     alert(e.response?.data?.detail || '导出失败')
   }
-}
-
-async function handleDelete(id: string) {
-  if (!confirm('确定删除该仪器？')) return
-  try {
-    await deleteInstrument(id)
-    instruments.value = instruments.value.filter((i) => i.id !== id)
-  } catch {}
 }
 
 onMounted(load)
@@ -149,19 +138,6 @@ onMounted(load)
 .status-badge.available { background: #dcfce7; color: #166534; }
 .status-badge.maintenance { background: #fef9c3; color: #854d0e; }
 .status-badge.retired { background: #f1f5f9; color: #64748b; }
-.actions {
-  display: flex;
-  gap: 8px;
-}
 .clickable-row { cursor: pointer; }
 .clickable-row:hover { background: #f8fafc; }
-.btn-edit, .btn-delete {
-  padding: 4px 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 4px;
-  background: white;
-  cursor: pointer;
-  font-size: 13px;
-}
-.btn-delete { color: #dc2626; border-color: #fecaca; }
 </style>
