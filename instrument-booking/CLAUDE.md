@@ -95,3 +95,35 @@ Model → Schema → Service → Router
 - **Redis 在线状态** — 使用 Redis 追踪用户在线状态（key: `online:{user_id}`, TTL: 5分钟），每次认证请求自动刷新
 - **时区处理** — 数据库存储 UTC 时间，通知显示时使用 `utc_to_beijing()` 转换为北京时间
 - **当前状态** — 已完成 30 项需求，详见 `HANDOVER.md`
+
+## Git 工作流程（必须遵守）
+
+### 每日备份规则
+
+**每天下班前必须执行一次推送**，确保代码备份到GitHub：
+
+```bash
+# 如果有未提交的改动
+git add . && git commit -m "daily: 每日备份" && git push
+
+# 如果没有改动，也确认一下状态
+git status
+```
+
+### 提交规范
+
+每次完成一个功能或修复bug后，立即提交并推送：
+
+```bash
+git add . && git commit -m "feat: 新增xxx功能" && git push
+git add . && git commit -m "fix: 修复xxx问题" && git push
+git add . && git commit -m "docs: 更新xxx文档" && git push
+```
+
+### 新接手开发者入门
+
+1. 克隆项目：`git clone https://github.com/zhangxlei/instrument-booking.git`
+2. 阅读 `QUICK_START.md` 和 `HANDOVER.md`
+3. 双击桌面 `启动仪器预约系统.bat` 启动项目
+4. 开发前执行 `git pull` 获取最新代码
+5. 开发完成后提交并推送，通知Shelley审核合并
