@@ -47,13 +47,17 @@ instrument-booking/
 │       │   ├── config.py       # Pydantic Settings（所有环境变量）
 │       │   ├── database.py     # SQLAlchemy async engine + session 工厂
 │       │   ├── security.py     # JWT 生成/验证、密码哈希
-│       │   └── deps.py         # 依赖注入：get_current_user、require_admin
+│       │   ├── deps.py         # 依赖注入：get_current_user、require_admin、在线状态更新
+│       │   └── redis.py        # Redis 连接池 + 在线状态读写
 │       ├── models/             # SQLAlchemy ORM 模型
 │       │   ├── base.py         # Base + TimestampMixin
 │       │   ├── user.py
 │       │   ├── instrument.py
 │       │   ├── instrument_attachment.py
 │       │   ├── booking.py
+│       │   ├── booking_review.py
+│       │   ├── booking_document.py
+│       │   ├── lab_document.py
 │       │   └── notification.py
 │       ├── schemas/            # Pydantic 请求/响应模型
 │       │   ├── common.py       # MessageResponse、PaginatedResponse
@@ -68,6 +72,7 @@ instrument-booking/
 │       │   ├── user_service.py
 │       │   ├── instrument_service.py
 │       │   ├── booking_service.py
+│       │   ├── booking_review_service.py
 │       │   ├── notification_service.py
 │       │   └── export_service.py
 │       └── api/                # 路由层
@@ -78,7 +83,9 @@ instrument-booking/
 │               ├── instruments.py
 │               ├── bookings.py
 │               ├── admin.py
-│               └── notifications.py
+│               ├── notifications.py
+│               ├── booking_reviews.py
+│               └── lab_documents.py
 │
 └── frontend/
     ├── Dockerfile              # 多阶段构建：npm build + nginx
@@ -117,7 +124,7 @@ instrument-booking/
             ├── auth/           # LoginView、RegisterView
             ├── instruments/    # InstrumentListView、InstrumentDetailView
             ├── bookings/       # MyBookingsView、BookingDetailView
-            ├── admin/          # AdminDashboard、AdminInstruments、AdminBookings、AdminUsers
+            ├── admin/          # AdminDashboard、AdminInstruments、AdminBookings、AdminUsers、AdminOnlineStatus
             └── NotFoundView.vue
 ```
 
@@ -698,6 +705,38 @@ docker-compose up --build -d
 
 ---
 
+## V3 改动（2026-07-06）
+
+### V3 改动清单
+
+| # | 内容 | 涉及范围 |
+|---|------|----------|
+| 13 | **通知日期修复**：通知消息中的时间从UTC转换为北京时间（UTC+8） | services/booking_service.py |
+| 14 | **管理员在线状态查看**：Redis追踪用户在线状态，管理员可查看所有人IP、最后活跃时间、浏览器信息 | core/redis.py (新建), core/deps.py, api/v1/admin.py, frontend AdminOnlineStatusView.vue (新建) |
+
+### V3 新增依赖
+
+- `backend/requirements.txt` — 增加 `redis[hiredis]>=5.0`
+
+### V3 新增文件
+
+- `backend/app/core/redis.py` — Redis 连接池 + 在线状态读写函数
+- `frontend/src/views/admin/AdminOnlineStatusView.vue` — 在线用户状态页面
+
+### V3 修改文件
+
+| 文件 | 改动说明 |
+|------|----------|
+| `backend/app/main.py` | lifespan 中初始化/关闭 Redis 连接池 |
+| `backend/app/core/deps.py` | `get_current_user` 每次请求更新 Redis 在线状态 |
+| `backend/app/api/v1/admin.py` | 新增 `GET /admin/online-status` 端点 + 修复 `timedelta` 导入 |
+| `frontend/src/api/admin.ts` | 新增 `getOnlineStatus()` API 调用 |
+| `frontend/src/router/index.ts` | 注册 `/admin/online-status` 路由 |
+| `frontend/src/components/layout/AppSidebar.vue` | 添加"在线用户"菜单 + 重命名"预约管理"→"审批管理"、"预约总览"→"仪表预约管理" |
+| `backend/app/services/booking_service.py` | 添加 `utc_to_beijing()` 函数，替换6处 `strftime` 调用 |
+
+---
+
 ## 关键架构决策
 
 1. **异步 SQLAlchemy** — 所有数据库操作使用 await，需 async_sessionmaker
@@ -705,6 +744,8 @@ docker-compose up --build -d
 3. **前端状态** — Pinia 管理 auth 状态，其他页面级状态用 composable
 4. **附件存储** — 本地文件系统，UUID 重命名防冲突，Docker volume 持久化
 5. **角色权限** — admin 和 user 两个角色，API 层通过 require_admin 依赖控制
+6. **Redis 在线状态** — 使用 Redis 追踪用户在线状态（key: `online:{user_id}`, TTL: 5分钟），每次认证请求自动刷新
+7. **时区处理** — 数据库存储 UTC 时间，通知显示时使用 `utc_to_beijing()` 转换为北京时间
 
 ## 部署到另一台服务器
 

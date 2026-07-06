@@ -119,3 +119,18 @@ export async function exportInstrumentsExcel(): Promise<void> {
   a.click()
   URL.revokeObjectURL(url)
 }
+
+export interface UserOnlineStatus {
+  user_id: string
+  username: string
+  full_name: string
+  is_online: boolean
+  ip: string | null
+  last_active: string | null
+  browser: string | null
+}
+
+export async function getOnlineStatus(): Promise<UserOnlineStatus[]> {
+  const res = await client.get('/admin/online-status')
+  return res.data
+}

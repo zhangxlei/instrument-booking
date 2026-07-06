@@ -1,9 +1,10 @@
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.core.redis import get_redis, update_user_online_status
 from app.core.security import decode_token
 from app.models.user import User
 
@@ -11,6 +12,7 @@ security_scheme = HTTPBearer()
 
 
 async def get_current_user(
+    request: Request,
     credentials: HTTPAuthorizationCredentials = Depends(security_scheme),
     db: AsyncSession = Depends(get_db),
 ) -> User:
@@ -26,6 +28,15 @@ async def get_current_user(
     user = result.scalar_one_or_none()
     if user is None or not user.is_active:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="用户不存在或已停用")
+
+    try:
+        ip = request.headers.get("X-Forwarded-For", "").split(",")[0].strip()
+        if not ip:
+            ip = request.client.host if request.client else "unknown"
+        user_agent = request.headers.get("user-agent", "unknown")
+        await update_user_online_status(str(user.id), ip, user_agent)
+    except Exception:
+        pass
 
     return user
 

@@ -7,16 +7,19 @@
       仪器管理
     </router-link>
     <router-link to="/admin/booking-overview" class="sidebar-item" active-class="active">
-      预约总览
+      仪表预约管理
     </router-link>
     <router-link to="/admin/bookings" class="sidebar-item" active-class="active">
-      预约管理
+      审批管理
     </router-link>
     <router-link to="/admin/documents" class="sidebar-item" active-class="active">
       通知文档
     </router-link>
     <router-link to="/admin/users" class="sidebar-item" active-class="active">
       用户管理
+    </router-link>
+    <router-link to="/admin/online-status" class="sidebar-item" active-class="active">
+      在线用户
     </router-link>
   </aside>
 </template>

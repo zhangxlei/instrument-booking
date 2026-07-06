@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel
@@ -437,3 +437,40 @@ async def delete_maintenance(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="维护记录不存在")
     await db.delete(mt)
     return MessageResponse(message="维护记录已删除")
+
+
+class UserOnlineStatus(BaseModel):
+    user_id: str
+    username: str
+    full_name: str
+    is_online: bool
+    ip: str | None = None
+    last_active: str | None = None
+    browser: str | None = None
+
+
+@router.get("/online-status", response_model=list[UserOnlineStatus])
+async def get_online_status(
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_admin),
+):
+    from app.core.redis import get_all_users_online_status
+
+    result = await db.execute(select(User).order_by(User.full_name))
+    users = result.scalars().all()
+    online_data = await get_all_users_online_status()
+
+    statuses = []
+    for u in users:
+        data = online_data.get(str(u.id))
+        statuses.append(UserOnlineStatus(
+            user_id=str(u.id),
+            username=u.username,
+            full_name=u.full_name,
+            is_online=data is not None,
+            ip=data["ip"] if data else None,
+            last_active=data["last_active"] if data else None,
+            browser=data["ua"] if data else None,
+        ))
+
+    return statuses

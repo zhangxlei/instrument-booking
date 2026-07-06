@@ -85,6 +85,11 @@ const router = createRouter({
           name: 'AdminUsers',
           component: () => import('../views/admin/AdminUsersView.vue'),
         },
+        {
+          path: 'online-status',
+          name: 'AdminOnlineStatus',
+          component: () => import('../views/admin/AdminOnlineStatusView.vue'),
+        },
       ],
     },
     {

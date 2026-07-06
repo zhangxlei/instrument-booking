@@ -8,6 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from app.api.router import router
 from app.core.config import settings
 from app.core.rate_limiter import RateLimitMiddleware
+from app.core.redis import init_redis, close_redis
 
 
 async def seed_super_admin():
@@ -32,8 +33,10 @@ async def seed_super_admin():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    await init_redis()
     await seed_super_admin()
     yield
+    await close_redis()
 
 
 app = FastAPI(title="上海光电科技创新中心硅光实验室仪表预约系统", version="1.0.0", lifespan=lifespan)

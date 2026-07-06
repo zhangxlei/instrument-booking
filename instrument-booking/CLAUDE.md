@@ -45,7 +45,7 @@ instrument-booking/
 │   ├── uploads/attachments/   # 附件文件存储（Docker volume）
 │   └── app/
 │       ├── main.py            # FastAPI 入口
-│       ├── core/              # config, database, security, deps
+│       ├── core/              # config, database, security, deps, redis
 │       ├── models/            # SQLAlchemy ORM（User, Instrument, Booking, Notification 等）
 │       ├── schemas/           # Pydantic 请求/响应
 │       ├── services/          # 业务逻辑层
@@ -92,4 +92,6 @@ Model → Schema → Service → Router
 - **仪器图片存储** — `backend/uploads/images/`，以 `{instrument_id}.{ext}` 命名
 - **站内通知** — 在 booking_service 各操作后自动创建，不依赖邮件系统
 - **Model 临时字段** — Booking 模型上的 `user_username`、`user_full_name`、`instrument_name` 使用 `ClassVar` 声明，不在数据库持久化，在 `_enrich_bookings()` 中查询时填充
-- **当前状态** — 已完成 V2 功能改进（共 12 项），处于试运行阶段。详见 `DEVELOPMENT_PLAN.md`
+- **Redis 在线状态** — 使用 Redis 追踪用户在线状态（key: `online:{user_id}`, TTL: 5分钟），每次认证请求自动刷新
+- **时区处理** — 数据库存储 UTC 时间，通知显示时使用 `utc_to_beijing()` 转换为北京时间
+- **当前状态** — 已完成 30 项需求，详见 `HANDOVER.md`

@@ -22,12 +22,13 @@
 
 ```
 app/
-├── main.py              # 应用入口：FastAPI 实例、CORS、中间件
+├── main.py              # 应用入口：FastAPI 实例、CORS、中间件、Redis 初始化
 ├── core/                # 核心基础设施
 │   ├── config.py        # Pydantic Settings（所有配置项集中管理）
 │   ├── database.py      # SQLAlchemy async engine + session 工厂
 │   ├── security.py      # JWT 生成/验证、密码哈希
-│   ├── deps.py          # 依赖注入（get_current_user、require_admin）
+│   ├── deps.py          # 依赖注入（get_current_user、require_admin、在线状态更新）
+│   ├── redis.py         # Redis 连接池 + 在线状态读写
 │   └── rate_limiter.py  # 登录限流中间件
 │
 ├── models/              # SQLAlchemy ORM 模型（数据库表定义）
@@ -36,6 +37,9 @@ app/
 │   ├── instrument.py
 │   ├── instrument_attachment.py
 │   ├── booking.py
+│   ├── booking_review.py
+│   ├── booking_document.py
+│   ├── lab_document.py
 │   └── notification.py
 │
 ├── schemas/             # Pydantic 模型（API 请求/响应定义）
@@ -51,6 +55,7 @@ app/
 │   ├── auth_service.py
 │   ├── instrument_service.py
 │   ├── booking_service.py
+│   ├── booking_review_service.py
 │   ├── notification_service.py
 │   └── export_service.py
 │
@@ -61,7 +66,9 @@ app/
         ├── instruments.py
         ├── bookings.py
         ├── admin.py
-        └── notifications.py
+        ├── notifications.py
+        ├── booking_reviews.py
+        └── lab_documents.py
 ```
 
 ### 分层职责（从内到外）
@@ -157,7 +164,11 @@ src/
 | /admin/instruments | AdminInstrumentsView | 仪器管理 | 管理员 |
 | /admin/instruments/new | AdminInstrumentFormView | 新增仪器 | 管理员 |
 | /admin/instruments/:id/edit | AdminInstrumentFormView | 编辑仪器 | 管理员 |
-| /admin/bookings | AdminBookingsView | 预约管理 | 管理员 |
+| /admin/booking-overview | AdminBookingOverviewView | 仪表预约管理 | 管理员 |
+| /admin/bookings | AdminBookingsView | 审批管理 | 管理员 |
+| /admin/documents | AdminDocumentsView | 通知文档 | 管理员 |
+| /admin/users | AdminUsersView | 用户管理 | 管理员 |
+| /admin/online-status | AdminOnlineStatusView | 在线用户 | 管理员 |
 
 ### 数据流示例
 
@@ -202,3 +213,5 @@ bookings
 6. **JWT 双令牌** — access_token（30 分钟）+ refresh_token（7 天），前端 Axios 拦截器自动刷新
 7. **附件存储** — 本地文件系统，UUID 重命名防冲突，Docker volume 持久化
 8. **站内通知** — 在 booking_service 的每个操作后自动创建通知，不依赖邮件
+9. **Redis 在线状态** — 使用 Redis 追踪用户在线状态（5分钟过期），每次认证请求自动刷新
+10. **时区处理** — 数据库存储 UTC 时间，通知显示时转换为北京时间（UTC+8）

@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 from fastapi import HTTPException, status
 from sqlalchemy import and_, select
@@ -11,6 +11,16 @@ from app.models.user import User
 from app.schemas.booking import BookingCreate
 from app.services.booking_review_service import create_review
 from app.services.notification_service import create_notification
+
+BEIJING_TZ = timezone(timedelta(hours=8))
+
+
+def utc_to_beijing(utc_time: datetime) -> str:
+    if utc_time.tzinfo is None:
+        beijing_time = utc_time.replace(tzinfo=timezone.utc).astimezone(BEIJING_TZ)
+    else:
+        beijing_time = utc_time.astimezone(BEIJING_TZ)
+    return beijing_time.strftime('%m/%d %H:%M')
 
 
 async def create_booking(
@@ -56,7 +66,7 @@ async def create_booking(
     reviewer_id = uuid.UUID(data.reviewer_id) if data.reviewer_id else None
     await create_review(db, booking.id, reviewer_id)
 
-    time_str = f"{data.start_time.strftime('%m/%d %H:%M')}"
+    time_str = utc_to_beijing(data.start_time)
     await create_notification(db, user_id, "booking_pending",
         "预约已提交", f"您的仪器预约（{time_str}）已提交，等待审批", booking.id)
 
@@ -86,7 +96,7 @@ async def cancel_booking(db: AsyncSession, booking_id: uuid.UUID, user_id: uuid.
     booking.status = "cancelled"
     await create_notification(
         db, user_id, "booking_cancelled", "预约已取消",
-        f"您的预约（{booking.start_time.strftime('%m/%d %H:%M')}）已取消",
+        f"您的预约（{utc_to_beijing(booking.start_time)}）已取消",
         booking.id,
     )
 
@@ -155,7 +165,7 @@ async def approve_booking(db: AsyncSession, booking_id: uuid.UUID, admin_id: uui
     booking.approved_by = admin_id
     booking.approved_at = datetime.now(timezone.utc)
 
-    time_str = f"{booking.start_time.strftime('%m/%d %H:%M')}"
+    time_str = utc_to_beijing(booking.start_time)
     await create_notification(db, booking.user_id, "booking_approved",
         "预约已批准", f"您的预约（{time_str}）已被批准", booking.id)
 
@@ -176,7 +186,7 @@ async def reject_booking(
     booking.approved_at = datetime.now(timezone.utc)
     booking.rejection_reason = reason
 
-    time_str = f"{booking.start_time.strftime('%m/%d %H:%M')}"
+    time_str = utc_to_beijing(booking.start_time)
     await create_notification(db, booking.user_id, "booking_rejected",
         "预约已拒绝", f"您的预约（{time_str}）已被拒绝，原因：{reason}", booking.id)
 
@@ -205,7 +215,7 @@ async def update_booking(
     if booking.status == "approved":
         booking.status = "pending"
 
-    time_str = f"{start_time.strftime('%m/%d %H:%M')}"
+    time_str = utc_to_beijing(start_time)
     await create_notification(db, user_id, "booking_pending",
         "预约时间已修改", f"您的预约时间已修改为（{time_str}），等待管理员审批", booking.id)
 
@@ -311,7 +321,7 @@ async def admin_create_booking(db: AsyncSession, data) -> Booking:
     reviewer_id = uuid.UUID(data.reviewer_id) if data.reviewer_id else None
     await create_review(db, booking.id, reviewer_id)
 
-    time_str = f"{data.start_time.strftime('%m/%d %H:%M')}"
+    time_str = utc_to_beijing(data.start_time)
     await create_notification(db, user_id, "booking_pending",
         "管理员代预约", f"管理员为您预约了仪器（{time_str}），等待审批", booking.id)
     if data.reviewer_id and str(data.reviewer_id) != str(user_id):
