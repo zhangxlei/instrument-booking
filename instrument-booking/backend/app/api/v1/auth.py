@@ -1,3 +1,5 @@
+import uuid
+
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from sqlalchemy import select
@@ -68,17 +70,18 @@ async def change_my_username(
 
 
 class UserBriefInfo(BaseModel):
-    id: str
+    id: uuid.UUID
     username: str
     full_name: str
 
     model_config = {"from_attributes": True}
 
 
-@router.get("/users", response_model=list[UserBriefInfo])
+@router.get("/users")
 async def list_all_users(
     db: AsyncSession = Depends(get_db),
     _: User = Depends(get_current_user),
 ):
     result = await db.execute(select(User).order_by(User.full_name))
-    return result.scalars().all()
+    users = result.scalars().all()
+    return [{"id": str(u.id), "username": u.username, "full_name": u.full_name} for u in users]
