@@ -87,14 +87,20 @@
     <!-- Book for Others Dialog -->
     <div v-if="showBookForDialog" class="dialog-overlay" @click.self="showBookForDialog = false">
       <div class="dialog">
-        <h3>代预约</h3>
+        <h3>代外部客户预约</h3>
         <div class="form-group">
-          <label>用户ID</label>
-          <input v-model="bookForUserId" placeholder="输入用户ID" />
+          <label>选择用户</label>
+          <select v-model="bookForUserId">
+            <option value="">请选择用户</option>
+            <option v-for="u in users" :key="u.id" :value="u.id">{{ u.full_name }}({{ u.username }})</option>
+          </select>
         </div>
         <div class="form-group">
-          <label>仪器ID</label>
-          <input v-model="bookForInstrumentId" placeholder="输入仪器ID" />
+          <label>选择仪器</label>
+          <select v-model="bookForInstrumentId">
+            <option value="">请选择仪器</option>
+            <option v-for="inst in instruments" :key="inst.id" :value="inst.id">{{ inst.name }}</option>
+          </select>
         </div>
         <div class="form-group">
           <label>开始时间</label>
@@ -121,7 +127,8 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { getAdminBookings, approveBooking, rejectBooking, adminRescheduleBooking, adminCancelBooking, adminCreateBooking, exportBookingsExcel, batchCancelBookings } from '../../api/admin'
+import { getAdminBookings, approveBooking, rejectBooking, adminRescheduleBooking, adminCancelBooking, adminCreateBooking, exportBookingsExcel, batchCancelBookings, getUsers, type UserAdmin } from '../../api/admin'
+import { getInstruments, type InstrumentRead } from '../../api/instruments'
 import type { BookingRead } from '../../api/bookings'
 import BookingApprovalTable from '../../components/admin/BookingApprovalTable.vue'
 import ConfirmDialog from '../../components/common/ConfirmDialog.vue'
@@ -131,6 +138,8 @@ import StatusBadge from '../../components/common/StatusBadge.vue'
 
 const pending = ref<BookingRead[]>([])
 const allBookings = ref<BookingRead[]>([])
+const users = ref<UserAdmin[]>([])
+const instruments = ref<InstrumentRead[]>([])
 const loading = ref(true)
 const processing = ref(false)
 const showRejectDialog = ref(false)
@@ -194,6 +203,9 @@ async function load() {
     ])
     pending.value = p
     allBookings.value = all
+    const [u, inst] = await Promise.all([getUsers(), getInstruments()])
+    users.value = u
+    instruments.value = inst
   } catch {}
   loading.value = false
 }

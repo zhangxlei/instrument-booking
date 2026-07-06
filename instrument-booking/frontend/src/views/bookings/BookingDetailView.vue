@@ -25,6 +25,18 @@
         <div v-if="booking.rejection_reason" class="info-row"><span class="label">拒绝原因</span><span class="reject">{{ booking.rejection_reason }}</span></div>
       </div>
 
+      <div class="detail-section">
+        <h3>测试需求文档</h3>
+        <div v-if="documents.length === 0" class="no-data">暂无文档</div>
+        <div v-for="doc in documents" :key="doc.id" class="doc-item">
+          <a :href="`/api/v1/bookings/${route.params.id}/documents/${doc.id}`" target="_blank">{{ doc.original_filename }}</a>
+          <span class="doc-size">({{ (doc.file_size / 1024).toFixed(1) }} KB)</span>
+        </div>
+        <div class="upload-area">
+          <input type="file" @change="handleDocUpload" accept=".pdf,.doc,.docx,.txt,.zip" />
+        </div>
+      </div>
+
       <div class="actions">
         <ConfirmDialog
           :visible="showCancelConfirm"
@@ -61,9 +73,32 @@ const route = useRoute()
 const router = useRouter()
 const booking = ref<BookingRead | null>(null)
 const review = ref<{ status: string; reviewer_id?: string | null; tester_id?: string | null; reviewer_comment?: string | null } | null>(null)
+const documents = ref<{ id: string; original_filename: string; file_size: number }[]>([])
 const loading = ref(true)
 const error = ref<string | null>(null)
 const showCancelConfirm = ref(false)
+
+async function loadDocuments() {
+  try {
+    const res = await client.get(`/bookings/${route.params.id}/documents`)
+    documents.value = res.data
+  } catch {}
+}
+
+async function handleDocUpload(e: Event) {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+  const formData = new FormData()
+  formData.append('file', file)
+  try {
+    await client.post(`/bookings/${route.params.id}/documents`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    await loadDocuments()
+  } catch { alert('上传失败') }
+  input.value = ''
+}
 
 function formatTime(iso: string): string {
   const d = new Date(iso)
@@ -85,6 +120,7 @@ onMounted(async () => {
       const res = await client.get(`/booking-reviews/${route.params.id}`)
       review.value = res.data
     } catch {}
+    await loadDocuments()
   } catch { error.value = '加载失败' }
   finally { loading.value = false }
 })
@@ -105,4 +141,10 @@ onMounted(async () => {
 .actions { margin-top: 20px; padding-top: 16px; border-top: 1px solid #f1f5f9; }
 .btn-cancel { padding: 8px 20px; border: 1px solid #fecaca; color: #dc2626; background: white; border-radius: 6px; cursor: pointer; font-size: 14px; }
 .error-msg { text-align: center; color: #dc2626; padding: 48px; }
+.no-data { color: #94a3b8; font-size: 13px; padding: 8px 0; }
+.doc-item { font-size: 13px; padding: 4px 0; }
+.doc-item a { color: #3b82f6; text-decoration: none; }
+.doc-size { color: #94a3b8; font-size: 12px; }
+.upload-area { margin-top: 8px; }
+.upload-area input { font-size: 13px; }
 </style>
