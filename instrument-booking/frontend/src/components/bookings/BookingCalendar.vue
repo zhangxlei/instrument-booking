@@ -72,7 +72,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { getAvailability } from '../../api/instruments'
 import { createBooking } from '../../api/bookings'
-import { getUsers } from '../../api/admin'
+import client from '../../api/client'
 import ErrorAlert from '../common/ErrorAlert.vue'
 
 const props = defineProps<{
@@ -313,7 +313,10 @@ async function handleSubmit() {
 
 onMounted(async () => {
   await fetchAvailability()
-  try { userList.value = await getUsers() } catch {}
+  try {
+    const res = await client.get('/auth/users')
+    userList.value = res.data
+  } catch {}
 })
 </script>
 

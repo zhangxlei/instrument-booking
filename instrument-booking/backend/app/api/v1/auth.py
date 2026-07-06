@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -63,3 +64,20 @@ async def change_my_username(
 ):
     await auth_service.change_username(db, current_user, data.new_username)
     return MessageResponse(message="用户名已修改")
+
+
+class UserBriefInfo(BaseModel):
+    id: str
+    username: str
+    full_name: str
+
+    model_config = {"from_attributes": True}
+
+
+@router.get("/users", response_model=list[UserBriefInfo])
+async def list_all_users(
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_user),
+):
+    result = await db.execute(select(User).order_by(User.full_name))
+    return result.scalars().all()
