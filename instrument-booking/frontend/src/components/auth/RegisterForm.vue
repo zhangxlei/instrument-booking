@@ -11,7 +11,7 @@
     </div>
     <div class="form-group">
       <label>密码</label>
-      <input v-model="form.password" type="password" placeholder="请输入密码（至少 6 位）" required />
+      <input v-model="form.password" type="password" placeholder="请输入密码" required />
     </div>
     <button type="submit" class="btn-primary" :disabled="loading">
       {{ loading ? '注册中...' : '注册' }}

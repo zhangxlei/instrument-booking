@@ -10,6 +10,8 @@ export interface BookingRead {
   purpose: string | null
   notes: string | null
   rejection_reason: string | null
+  message: string | null
+  probe_type: string | null
   created_at: string
   user_username?: string | null
   user_full_name?: string | null
@@ -22,6 +24,8 @@ export interface BookingCreate {
   end_time: string
   purpose?: string
   notes?: string
+  message?: string
+  probe_type?: string
 }
 
 export async function getBookings(status?: string): Promise<BookingRead[]> {

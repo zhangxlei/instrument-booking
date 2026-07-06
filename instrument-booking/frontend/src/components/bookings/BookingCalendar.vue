@@ -1,51 +1,64 @@
 <template>
   <div class="booking-calendar">
-    <div class="calendar-grid">
-      <div class="cal-header-row">
-        <div class="cal-time-header">时间</div>
-        <div v-for="day in weekDays" :key="day.date" class="cal-day-header">
-          <div class="day-name">{{ day.weekday }}</div>
-          <div class="day-date">{{ day.monthDay }}</div>
-        </div>
+    <div v-if="instrumentUnavailable" class="unavailable-notice">
+      {{ instrumentUnavailable }}
+    </div>
+
+    <template v-else>
+      <div class="cal-nav">
+        <button class="btn-nav" @click="prevWeek">‹ 上一周</button>
+        <span class="cal-nav-title">{{ calTitle }}</span>
+        <button class="btn-nav" @click="nextWeek">下一周 ›</button>
+        <button class="btn-today" @click="goToToday">今天</button>
       </div>
-      <div v-for="hour in hours" :key="hour" class="cal-row">
-        <div class="cal-time">{{ hour }}:00</div>
-        <div
-          v-for="day in weekDays"
-          :key="day.date + '-' + hour"
-          class="cal-slot"
-          :class="slotClass(day.date, hour)"
-          @click="toggleSlot(day.date, hour)"
-        >
-          <div v-if="getSlot(day.date, hour)?.booked_by" class="slot-booked-by">
-            {{ getSlot(day.date, hour)?.booked_by?.username }}
+
+      <div class="calendar-grid">
+        <div class="cal-header-row">
+          <div class="cal-time-header">时间</div>
+          <div v-for="day in weekDays" :key="day.date" class="cal-day-header">
+            <div class="day-name">{{ day.weekday }}</div>
+            <div class="day-date">{{ day.monthDay }}</div>
+          </div>
+        </div>
+        <div v-for="hour in hours" :key="hour" class="cal-row">
+          <div class="cal-time">{{ String(hour).padStart(2, '0') }}:00</div>
+          <div
+            v-for="day in weekDays"
+            :key="day.date + '-' + hour"
+            class="cal-slot"
+            :class="slotClass(day.date, hour)"
+            @click="toggleSlot(day.date, hour)"
+          >
+            <div v-if="getSlot(day.date, hour)?.booked_by" class="slot-booked-by">
+              {{ getSlot(day.date, hour)?.booked_by?.username }}
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <div v-if="selectedSlots.length > 0" class="booking-form">
-      <div class="selected-info">
-        已选择：{{ formatSlotRange(selectedSlots) }}
-        <span v-if="estimatedCost" class="cost">预估费用：¥{{ estimatedCost }}</span>
+      <div v-if="selectedSlots.length > 0" class="booking-form">
+        <div class="selected-info">
+          已选择：{{ formatSlotRange(selectedSlots) }}
+          <span v-if="estimatedCost" class="cost">预估费用：¥{{ estimatedCost }}</span>
+        </div>
+        <div class="form-group">
+          <label>使用目的</label>
+          <textarea v-model="purpose" placeholder="简述需要使用仪器的目的" rows="2" />
+        </div>
+        <ErrorAlert :message="error" />
+        <div class="form-actions">
+          <button class="btn-cancel" @click="clearSelection">取消选择</button>
+          <button class="btn-primary" :disabled="submitting" @click="handleSubmit">
+            {{ submitting ? '提交中...' : '提交预约' }}
+          </button>
+        </div>
       </div>
-      <div class="form-group">
-        <label>使用目的</label>
-        <textarea v-model="purpose" placeholder="简述需要使用仪器的目的" rows="2" />
-      </div>
-      <ErrorAlert :message="error" />
-      <div class="form-actions">
-        <button class="btn-cancel" @click="clearSelection">取消选择</button>
-        <button class="btn-primary" :disabled="submitting" @click="handleSubmit">
-          {{ submitting ? '提交中...' : '提交预约' }}
-        </button>
-      </div>
-    </div>
+    </template>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { getAvailability } from '../../api/instruments'
 import { createBooking } from '../../api/bookings'
 import ErrorAlert from '../common/ErrorAlert.vue'
@@ -53,6 +66,7 @@ import ErrorAlert from '../common/ErrorAlert.vue'
 const props = defineProps<{
   instrumentId: string
   pricePerHour?: number | null
+  instrumentStatus?: string
 }>()
 
 const emit = defineEmits<{ saved: [] }>()
@@ -76,20 +90,87 @@ const purpose = ref('')
 const submitting = ref(false)
 const error = ref<string | null>(null)
 const shiftAnchor = ref<{ date: string; hour: number } | null>(null)
+const weekOffset = ref(0)
 
-const hours = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
+const hours = Array.from({ length: 24 }, (_, i) => i)
+
+const instrumentUnavailable = computed(() => {
+  if (props.instrumentStatus === 'maintenance') return '该仪器当前处于维护中，暂不可预约'
+  if (props.instrumentStatus === 'retired') return '该仪器已报废，不可预约'
+  return ''
+})
+
+function getWeekStart(offset: number): Date {
+  const now = new Date()
+  const dayOfWeek = now.getDay()
+  const monday = new Date(now)
+  monday.setDate(now.getDate() - ((dayOfWeek + 6) % 7) + offset * 7)
+  monday.setHours(0, 0, 0, 0)
+  return monday
+}
+
+const weekStart = computed(() => getWeekStart(weekOffset.value))
 
 const weekDays = computed(() => {
-  return allDays.value.map((d) => {
-    const dt = new Date(d.date + 'T00:00:00')
-    const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
-    return {
-      date: d.date,
-      weekday: weekdays[dt.getDay()],
-      monthDay: `${dt.getMonth() + 1}/${dt.getDate()}`,
-    }
-  })
+  const days: { date: string; weekday: string; monthDay: string }[] = []
+  const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
+  const start = new Date(weekStart.value)
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(start)
+    d.setDate(start.getDate() + i)
+    const dateStr = d.toISOString().split('T')[0]
+    days.push({
+      date: dateStr,
+      weekday: weekdays[d.getDay()],
+      monthDay: `${d.getMonth() + 1}/${d.getDate()}`,
+    })
+  }
+  return days
 })
+
+const calTitle = computed(() => {
+  const start = weekDays.value[0]
+  const end = weekDays.value[6]
+  return `${start.date} ~ ${end.date}`
+})
+
+function prevWeek() {
+  weekOffset.value--
+}
+
+function nextWeek() {
+  weekOffset.value++
+}
+
+function goToToday() {
+  weekOffset.value = 0
+}
+
+const daysToFetch = computed(() => {
+  const start = weekStart.value
+  const end = new Date(start)
+  end.setDate(start.getDate() + 6)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  if (start <= today) {
+    return 7
+  }
+  const maxDate = new Date(2030, 0, 1)
+  const diff = Math.ceil((end.getTime() - today.getTime()) / 86400000)
+  return Math.min(diff + 1, 3650)
+})
+
+async function fetchAvailability() {
+  loading.value = true
+  try {
+    const days = daysToFetch.value
+    allDays.value = await getAvailability(props.instrumentId, days)
+  } catch {}
+  loading.value = false
+}
+
+watch(weekOffset, fetchAvailability)
 
 function getSlot(date: string, hour: number): SlotInfo | undefined {
   const day = allDays.value.find((d) => d.date === date)
@@ -99,6 +180,7 @@ function getSlot(date: string, hour: number): SlotInfo | undefined {
 }
 
 function slotClass(date: string, hour: number): string {
+  if (instrumentUnavailable.value) return 'hidden'
   const slot = getSlot(date, hour)
   if (!slot) return 'hidden'
   if (!slot.available) return 'booked'
@@ -108,18 +190,17 @@ function slotClass(date: string, hour: number): string {
 }
 
 function toggleSlot(date: string, hour: number) {
+  if (instrumentUnavailable.value) return
   const slot = getSlot(date, hour)
   if (!slot || !slot.available) return
 
   const index = selectedSlots.value.findIndex((s) => s.date === date && s.hour === hour)
-
   if (index >= 0) {
     selectedSlots.value.splice(index, 1)
     return
   }
 
   if (shiftAnchor.value) {
-    // Range selection
     const sorted = sortSlots([shiftAnchor.value, { date, hour }])
     const newSlots: { date: string; hour: number }[] = []
     for (const d of allDays.value) {
@@ -211,22 +292,51 @@ async function handleSubmit() {
   }
 }
 
-onMounted(async () => {
-  try {
-    allDays.value = await getAvailability(props.instrumentId, 7)
-  } catch {}
-  loading.value = false
-})
+onMounted(fetchAvailability)
 </script>
 
 <style scoped>
+.unavailable-notice {
+  padding: 20px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #dc2626;
+  text-align: center;
+  font-size: 15px;
+}
+.cal-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.cal-nav-title {
+  flex: 1;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+}
+.btn-nav, .btn-today {
+  padding: 6px 14px;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.btn-nav:hover, .btn-today:hover {
+  background: #f8fafc;
+}
 .calendar-grid {
   display: grid;
   grid-template-columns: 60px repeat(7, 1fr);
   border: 1px solid #e2e8f0;
   border-radius: 8px;
-  overflow: hidden;
+  overflow: auto;
   background: white;
+  max-height: 600px;
 }
 .cal-header-row {
   display: contents;
@@ -239,12 +349,13 @@ onMounted(async () => {
   border-bottom: 1px solid #e2e8f0;
   font-weight: 600;
   color: #475569;
+  position: sticky;
+  top: 0;
+  z-index: 2;
 }
 .day-name { font-size: 11px; color: #94a3b8; font-weight: 400; }
 .day-date { font-size: 13px; }
-.cal-row {
-  display: contents;
-}
+.cal-row { display: contents; }
 .cal-time {
   padding: 8px 4px;
   font-size: 11px;
@@ -263,24 +374,11 @@ onMounted(async () => {
   font-size: 11px;
   transition: background 0.1s;
 }
-.cal-slot.available {
-  background: #f0fdf4;
-  cursor: pointer;
-}
-.cal-slot.available:hover {
-  background: #bbf7d0;
-}
-.cal-slot.booked {
-  background: #f1f5f9;
-  cursor: not-allowed;
-}
-.cal-slot.selected {
-  background: #93c5fd;
-  cursor: pointer;
-}
-.cal-slot.hidden {
-  background: #fafafa;
-}
+.cal-slot.available { background: #f0fdf4; cursor: pointer; }
+.cal-slot.available:hover { background: #bbf7d0; }
+.cal-slot.booked { background: #f1f5f9; cursor: not-allowed; }
+.cal-slot.selected { background: #93c5fd; cursor: pointer; }
+.cal-slot.hidden { background: #fafafa; }
 .slot-booked-by {
   font-size: 10px;
   color: #94a3b8;
@@ -301,14 +399,8 @@ onMounted(async () => {
   margin-bottom: 12px;
   font-weight: 500;
 }
-.cost {
-  margin-left: 12px;
-  color: #059669;
-  font-weight: 600;
-}
-.form-group {
-  margin-bottom: 12px;
-}
+.cost { margin-left: 12px; color: #059669; font-weight: 600; }
+.form-group { margin-bottom: 12px; }
 .form-group label {
   display: block;
   font-size: 14px;
@@ -325,10 +417,7 @@ onMounted(async () => {
   box-sizing: border-box;
   resize: vertical;
 }
-.form-actions {
-  display: flex;
-  gap: 8px;
-}
+.form-actions { display: flex; gap: 8px; }
 .btn-primary {
   padding: 8px 24px;
   background: #3b82f6;

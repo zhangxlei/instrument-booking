@@ -31,3 +31,20 @@ class UserBrief(BaseModel):
 
 class RefreshRequest(BaseModel):
     refresh_token: str
+
+
+class ChangePasswordRequest(BaseModel):
+    old_password: str
+    new_password: str
+
+
+class ChangeUsernameRequest(BaseModel):
+    new_username: str
+
+
+class AdminSetPasswordRequest(BaseModel):
+    new_password: str
+
+
+class AdminSetUsernameRequest(BaseModel):
+    new_username: str

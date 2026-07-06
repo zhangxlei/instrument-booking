@@ -41,12 +41,24 @@
 
     <div class="form-row">
       <div class="form-group">
-        <label>最少提前预约（分钟）</label>
-        <input v-model.number="form.min_notice_minutes" type="number" min="0" />
+        <label>仪器管理人</label>
+        <input v-model="form.manager_name" placeholder="负责人姓名" />
       </div>
       <div class="form-group">
-        <label>预约间隔缓冲（分钟）</label>
-        <input v-model.number="form.cleanup_time_minutes" type="number" min="0" />
+        <label>联系方式</label>
+        <input v-model="form.manager_phone" placeholder="手机号" />
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>探针类型</label>
+        <select v-model="form.probe_type">
+          <option value="">请选择</option>
+          <option value="GSG">GSG</option>
+          <option value="GSSG">GSSG</option>
+          <option value="GSGSG">GSGSG</option>
+        </select>
       </div>
     </div>
 
@@ -120,8 +132,9 @@ const form = reactive({
   status: 'available',
   requires_approval: true,
   price_per_hour: null as number | null,
-  min_notice_minutes: 60,
-  cleanup_time_minutes: 15,
+  manager_name: '',
+  manager_phone: '',
+  probe_type: '',
 })
 
 onMounted(async () => {
@@ -190,11 +203,12 @@ async function handleSubmit() {
   saving.value = true
   error.value = null
   try {
+    const submitData = { ...form, price_per_hour: form.price_per_hour ?? undefined }
     let id = props.instrumentId
     if (isEdit && id) {
-      await updateInstrument(id, form)
+      await updateInstrument(id, submitData)
     } else {
-      const result = await createInstrument(form)
+      const result = await createInstrument(submitData)
       id = result.id
     }
     if (selectedImage.value && id) {

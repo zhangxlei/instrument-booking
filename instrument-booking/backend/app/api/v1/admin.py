@@ -4,6 +4,10 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel
 from sqlalchemy import func, select
+
+
+class BatchCancelRequest(BaseModel):
+    booking_ids: list[str]
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -12,10 +16,11 @@ from app.core.security import hash_password
 from app.models.booking import Booking
 from app.models.instrument import Instrument, InstrumentMaintenance
 from app.models.user import User
+from app.schemas.auth import AdminSetPasswordRequest, AdminSetUsernameRequest
 from app.schemas.booking import BookingCreate, BookingRead, BookingRejectRequest, BookingUpdate
 from app.schemas.common import MessageResponse
 from app.schemas.user import UserRead
-from app.services import booking_service, export_service
+from app.services import auth_service, booking_service, export_service
 
 router = APIRouter(prefix="/admin", tags=["管理后台"])
 
@@ -240,12 +245,36 @@ async def admin_toggle_user_active(
     return MessageResponse(message=f"用户已{'启用' if user.is_active else '禁用'}")
 
 
+@router.put("/users/{user_id}/password", response_model=MessageResponse)
+async def admin_set_user_password(
+    user_id: uuid.UUID,
+    data: AdminSetPasswordRequest,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_admin),
+):
+    await auth_service.admin_set_password(db, str(user_id), data.new_password)
+    return MessageResponse(message="密码已重置")
+
+
+@router.put("/users/{user_id}/username", response_model=MessageResponse)
+async def admin_set_user_username(
+    user_id: uuid.UUID,
+    data: AdminSetUsernameRequest,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_admin),
+):
+    await auth_service.admin_set_username(db, str(user_id), data.new_username)
+    return MessageResponse(message="用户名已修改")
+
+
 @router.delete("/users/{user_id}", response_model=MessageResponse)
 async def admin_delete_user(
     user_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(require_admin),
+    admin_user: User = Depends(require_admin),
 ):
+    if str(user_id) == str(admin_user.id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="不能删除自己")
     user = await db.get(User, user_id)
     if user is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="用户不存在")
@@ -273,6 +302,17 @@ async def admin_cancel_booking(
 ):
     await booking_service.admin_cancel_booking(db, booking_id)
     return MessageResponse(message="预约已取消")
+
+
+@router.post("/bookings/batch-cancel", response_model=MessageResponse)
+async def admin_batch_cancel(
+    data: BatchCancelRequest,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_admin),
+):
+    ids = [uuid.UUID(bid) for bid in data.booking_ids]
+    count = await booking_service.batch_cancel_bookings(db, ids)
+    return MessageResponse(message=f"已取消 {count} 条预约")
 
 
 @router.post("/bookings", response_model=BookingRead, status_code=201)

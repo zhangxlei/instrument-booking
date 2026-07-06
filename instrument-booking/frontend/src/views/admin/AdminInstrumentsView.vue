@@ -3,7 +3,7 @@
     <div class="page-header">
       <h2>仪器管理</h2>
       <div class="header-actions">
-        <a href="/api/v1/admin/export/instruments" class="btn-export" target="_blank">导出 Excel</a>
+        <button class="btn-export" @click="handleExport">导出 Excel</button>
         <button class="btn-add" @click="$router.push('/admin/instruments/new')">+ 新增仪器</button>
       </div>
     </div>
@@ -23,14 +23,14 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="item in instruments" :key="item.id">
+        <tr v-for="item in instruments" :key="item.id" class="clickable-row" @click="$router.push(`/admin/instruments/${item.id}/edit`)">
           <td>{{ item.name }}</td>
           <td>{{ item.location || '-' }}</td>
           <td>
             <span class="status-badge" :class="item.status">{{ statusMap[item.status] }}</span>
           </td>
           <td>{{ item.price_per_hour ? '¥' + item.price_per_hour + '/小时' : '-' }}</td>
-          <td class="actions">
+          <td class="actions" @click.stop>
             <button class="btn-edit" @click="$router.push(`/admin/instruments/${item.id}/edit`)">编辑</button>
             <button class="btn-delete" @click="handleDelete(item.id)">删除</button>
           </td>
@@ -43,6 +43,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { getInstruments, deleteInstrument, type InstrumentRead } from '../../api/instruments'
+import { exportInstrumentsExcel } from '../../api/admin'
 import LoadingSpinner from '../../components/common/LoadingSpinner.vue'
 import EmptyState from '../../components/common/EmptyState.vue'
 
@@ -61,6 +62,14 @@ async function load() {
     instruments.value = await getInstruments()
   } catch {}
   loading.value = false
+}
+
+async function handleExport() {
+  try {
+    await exportInstrumentsExcel()
+  } catch (e: any) {
+    alert(e.response?.data?.detail || '导出失败')
+  }
 }
 
 async function handleDelete(id: string) {
@@ -144,6 +153,8 @@ onMounted(load)
   display: flex;
   gap: 8px;
 }
+.clickable-row { cursor: pointer; }
+.clickable-row:hover { background: #f8fafc; }
 .btn-edit, .btn-delete {
   padding: 4px 12px;
   border: 1px solid #d1d5db;

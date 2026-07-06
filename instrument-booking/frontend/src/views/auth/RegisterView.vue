@@ -1,7 +1,7 @@
 <template>
   <div class="auth-page">
     <div class="auth-card">
-      <h2 class="auth-title">硅光实验室预约管理系统(试运行)</h2>
+      <h2 class="auth-title">上海光电科技创新中心硅光实验室仪表预约系统</h2>
       <RegisterForm />
     </div>
   </div>

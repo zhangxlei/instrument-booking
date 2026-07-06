@@ -3,8 +3,8 @@
     <div class="page-header">
       <h2>预约管理</h2>
       <div class="header-actions">
-        <button class="btn-book-for" @click="showBookForDialog = true">+ 代预约</button>
-        <a href="/api/v1/admin/export/bookings" class="btn-export" target="_blank">导出 Excel</a>
+        <button class="btn-book-for" @click="showBookForDialog = true">+ 代外部客户预约</button>
+        <button class="btn-export" @click="handleExport">导出 Excel</button>
       </div>
     </div>
 
@@ -34,13 +34,21 @@
 
     <div class="section">
       <h3>全部预约</h3>
+      <div v-if="allBookings.length > 0" class="batch-bar">
+        <label class="checkbox-label">
+          <input type="checkbox" v-model="selectAll" @change="toggleSelectAll" /> 全选
+        </label>
+        <span class="selected-count">已选 {{ selectedIds.length }} 项</span>
+        <button class="btn-batch-cancel" :disabled="selectedIds.length === 0" @click="handleBatchCancel">批量取消</button>
+      </div>
       <LoadingSpinner v-if="loading" text="加载中..." />
       <table v-else-if="allBookings.length > 0" class="data-table">
         <thead>
-          <tr><th>用户</th><th>仪器</th><th>时间段</th><th>目的</th><th>状态</th><th>操作</th></tr>
+          <tr><th style="width:36px"></th><th>用户</th><th>仪器</th><th>时间段</th><th>目的</th><th>状态</th><th>操作</th></tr>
         </thead>
         <tbody>
-          <tr v-for="b in allBookings" :key="b.id">
+          <tr v-for="b in allBookings" :key="b.id" :class="{ 'row-selected': selectedIds.includes(b.id) }">
+            <td><input type="checkbox" :checked="selectedIds.includes(b.id)" @change="toggleSelect(b.id)" /></td>
             <td>{{ b.user_full_name || b.user_username || b.user_id.slice(0, 8) }}</td>
             <td>{{ b.instrument_name || b.instrument_id.slice(0, 8) }}</td>
             <td>{{ formatTime(b.start_time) }} ~ {{ formatTime(b.end_time) }}</td>
@@ -113,7 +121,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { getAdminBookings, approveBooking, rejectBooking, adminRescheduleBooking, adminCancelBooking, adminCreateBooking } from '../../api/admin'
+import { getAdminBookings, approveBooking, rejectBooking, adminRescheduleBooking, adminCancelBooking, adminCreateBooking, exportBookingsExcel, batchCancelBookings } from '../../api/admin'
 import type { BookingRead } from '../../api/bookings'
 import BookingApprovalTable from '../../components/admin/BookingApprovalTable.vue'
 import ConfirmDialog from '../../components/common/ConfirmDialog.vue'
@@ -141,6 +149,36 @@ const bookForStart = ref('')
 const bookForEnd = ref('')
 const bookForPurpose = ref('')
 const bookForSubmitting = ref(false)
+
+// Batch cancel
+const selectedIds = ref<string[]>([])
+const selectAll = ref(false)
+
+function toggleSelect(id: string) {
+  const idx = selectedIds.value.indexOf(id)
+  if (idx >= 0) selectedIds.value.splice(idx, 1)
+  else selectedIds.value.push(id)
+}
+
+function toggleSelectAll() {
+  if (selectAll.value) {
+    selectedIds.value = allBookings.value.map((b) => b.id)
+  } else {
+    selectedIds.value = []
+  }
+}
+
+async function handleBatchCancel() {
+  if (!confirm(`确定取消选中的 ${selectedIds.value.length} 条预约？`)) return
+  try {
+    await batchCancelBookings(selectedIds.value)
+    selectedIds.value = []
+    selectAll.value = false
+    await load()
+  } catch (e: any) {
+    alert(e.response?.data?.detail || '批量取消失败')
+  }
+}
 
 function formatTime(iso: string): string {
   const d = new Date(iso)
@@ -238,6 +276,14 @@ async function confirmBookFor() {
   }
 }
 
+async function handleExport() {
+  try {
+    await exportBookingsExcel()
+  } catch (e: any) {
+    alert(e.response?.data?.detail || '导出失败')
+  }
+}
+
 onMounted(load)
 </script>
 
@@ -272,6 +318,30 @@ h2 { font-size: 22px; color: #1e293b; }
 }
 .section { margin-bottom: 32px; }
 .section h3 { font-size: 16px; margin: 0 0 12px; color: #475569; }
+.batch-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+  padding: 8px 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 13px;
+}
+.checkbox-label { cursor: pointer; user-select: none; }
+.selected-count { color: #64748b; }
+.btn-batch-cancel {
+  padding: 4px 12px;
+  background: #dc2626;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+.btn-batch-cancel:disabled { opacity: 0.5; cursor: not-allowed; }
+.row-selected { background: #eff6ff; }
 .data-table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; }
 .data-table th { background: #f8fafc; padding: 10px 12px; text-align: left; font-size: 13px; color: #64748b; font-weight: 600; border-bottom: 1px solid #e2e8f0; }
 .data-table td { padding: 10px 12px; font-size: 13px; border-bottom: 1px solid #f1f5f9; }

@@ -40,6 +40,9 @@ class Instrument(TimestampMixin, Base):
     price_per_hour: Mapped[float | None] = mapped_column(
         Numeric(10, 2), nullable=True
     )
+    manager_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    manager_phone: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    probe_type: Mapped[str | None] = mapped_column(String(50), nullable=True)
 
     bookings = relationship("Booking", back_populates="instrument")
     attachments = relationship(

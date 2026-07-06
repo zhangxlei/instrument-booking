@@ -34,7 +34,7 @@ async def list_instruments(
 @router.get("/{instrument_id}/availability")
 async def get_availability(
     instrument_id: uuid.UUID,
-    days: int = Query(7, ge=1, le=30),
+    days: int = Query(7, ge=1, le=3650),
     db: AsyncSession = Depends(get_db),
 ):
     from datetime import date, datetime, time, timedelta, timezone
@@ -75,8 +75,8 @@ async def get_availability(
 
     for day_offset in range(days):
         day = today + timedelta(days=day_offset)
-        day_start = datetime.combine(day, time(8, 0), tzinfo=timezone.utc)
-        day_end = datetime.combine(day, time(18, 0), tzinfo=timezone.utc)
+        day_start = datetime.combine(day, time(0, 0), tzinfo=timezone.utc)
+        day_end = datetime.combine(day, time(23, 59), tzinfo=timezone.utc)
 
         slots = []
         current = day_start

@@ -9,8 +9,9 @@ export interface InstrumentRead {
   status: string
   requires_approval: boolean
   price_per_hour: number | null
-  min_notice_minutes: number
-  cleanup_time_minutes: number
+  manager_name: string | null
+  manager_phone: string | null
+  probe_type: string | null
 }
 
 export interface InstrumentCreate {
@@ -20,8 +21,9 @@ export interface InstrumentCreate {
   image_url?: string
   requires_approval?: boolean
   price_per_hour?: number
-  min_notice_minutes?: number
-  cleanup_time_minutes?: number
+  manager_name?: string
+  manager_phone?: string
+  probe_type?: string
 }
 
 export interface AttachmentInfo {
@@ -81,7 +83,7 @@ export async function uploadAttachment(instrumentId: string, file: File) {
 
 export interface AvailabilitySlot {
   date: string
-  slots: { start: string; end: string; available: boolean }[]
+  slots: { start: string; end: string; available: boolean; booked_by: { username: string; full_name: string } | null }[]
 }
 
 export async function getAvailability(instrumentId: string, days = 7): Promise<AvailabilitySlot[]> {

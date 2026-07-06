@@ -84,3 +84,38 @@ export async function deleteUser(userId: string) {
   const res = await client.delete(`/admin/users/${userId}`)
   return res.data
 }
+
+export async function adminSetUserPassword(userId: string, newPassword: string) {
+  const res = await client.put(`/admin/users/${userId}/password`, { new_password: newPassword })
+  return res.data
+}
+
+export async function adminSetUserUsername(userId: string, newUsername: string) {
+  const res = await client.put(`/admin/users/${userId}/username`, { new_username: newUsername })
+  return res.data
+}
+
+export async function exportBookingsExcel(params?: { start_date?: string; end_date?: string; instrument_id?: string; status?: string }): Promise<void> {
+  const res = await client.get('/admin/export/bookings', { params, responseType: 'blob' })
+  const url = URL.createObjectURL(res.data)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'bookings.xlsx'
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+export async function batchCancelBookings(bookingIds: string[]): Promise<void> {
+  const res = await client.post('/admin/bookings/batch-cancel', { booking_ids: bookingIds })
+  return res.data
+}
+
+export async function exportInstrumentsExcel(): Promise<void> {
+  const res = await client.get('/admin/export/instruments', { responseType: 'blob' })
+  const url = URL.createObjectURL(res.data)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'instruments.xlsx'
+  a.click()
+  URL.revokeObjectURL(url)
+}

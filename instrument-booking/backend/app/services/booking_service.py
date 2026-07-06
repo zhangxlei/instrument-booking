@@ -45,6 +45,8 @@ async def create_booking(
         end_time=data.end_time,
         purpose=data.purpose,
         notes=data.notes,
+        message=data.message,
+        probe_type=data.probe_type,
         status=status_val,
     )
     db.add(booking)
@@ -247,6 +249,19 @@ async def admin_cancel_booking(db: AsyncSession, booking_id: uuid.UUID):
     booking.status = "cancelled"
 
 
+async def batch_cancel_bookings(db: AsyncSession, booking_ids: list[uuid.UUID]) -> int:
+    result = await db.execute(
+        select(Booking).where(Booking.id.in_(booking_ids))
+    )
+    bookings = result.scalars().all()
+    count = 0
+    for booking in bookings:
+        if booking.status in ("pending", "approved"):
+            booking.status = "cancelled"
+            count += 1
+    return count
+
+
 async def admin_create_booking(db: AsyncSession, data) -> Booking:
     instrument = await db.get(Instrument, uuid.UUID(data.instrument_id))
     if instrument is None:
@@ -263,6 +278,8 @@ async def admin_create_booking(db: AsyncSession, data) -> Booking:
         end_time=data.end_time,
         purpose=data.purpose,
         notes=data.notes,
+        message=data.message,
+        probe_type=data.probe_type,
         status=status_val,
     )
     db.add(booking)

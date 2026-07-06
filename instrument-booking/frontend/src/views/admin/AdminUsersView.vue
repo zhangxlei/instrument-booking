@@ -37,6 +37,7 @@
             <button class="btn-toggle" @click="handleToggleActive(u.id)">
               {{ u.is_active ? '禁用' : '启用' }}
             </button>
+            <button class="btn-action" @click="openResetPassword(u.id)">重置密码</button>
             <button class="btn-delete" @click="handleDelete(u.id)">删除</button>
           </td>
         </tr>
@@ -75,6 +76,8 @@
         </div>
       </div>
     </div>
+
+    <ChangePasswordDialog :visible="showPasswordDialog" :is-admin="true" :user-id="resetUserId" @close="showPasswordDialog = false" @saved="load" />
   </div>
 </template>
 
@@ -84,6 +87,7 @@ import { getUsers, createUser, changeUserRole, toggleUserActive, deleteUser, typ
 import LoadingSpinner from '../../components/common/LoadingSpinner.vue'
 import EmptyState from '../../components/common/EmptyState.vue'
 import ErrorAlert from '../../components/common/ErrorAlert.vue'
+import ChangePasswordDialog from '../../components/auth/ChangePasswordDialog.vue'
 
 const users = ref<UserAdmin[]>([])
 const loading = ref(true)
@@ -91,6 +95,13 @@ const showCreateDialog = ref(false)
 const createSaving = ref(false)
 const createError = ref<string | null>(null)
 const createForm = ref({ username: '', full_name: '', password: '', role: 'user' })
+const showPasswordDialog = ref(false)
+const resetUserId = ref('')
+
+function openResetPassword(userId: string) {
+  resetUserId.value = userId
+  showPasswordDialog.value = true
+}
 
 async function load() {
   loading.value = true
@@ -194,7 +205,7 @@ onMounted(load)
 .status-text.active { color: #166534; }
 .status-text.inactive { color: #dc2626; }
 .actions { display: flex; gap: 6px; }
-.btn-toggle, .btn-delete {
+.btn-toggle, .btn-action, .btn-delete {
   padding: 4px 12px;
   border: 1px solid;
   border-radius: 4px;

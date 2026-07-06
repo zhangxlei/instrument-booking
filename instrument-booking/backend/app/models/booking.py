@@ -37,6 +37,8 @@ class Booking(TimestampMixin, Base):
     )
     approved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     rejection_reason: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    probe_type: Mapped[str | None] = mapped_column(String(50), nullable=True)
 
     user = relationship("User", back_populates="bookings", foreign_keys=[user_id])
     approver = relationship("User", back_populates="approved_bookings", foreign_keys=[approved_by])

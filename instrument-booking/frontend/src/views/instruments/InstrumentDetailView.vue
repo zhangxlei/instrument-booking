@@ -18,6 +18,8 @@
         <div class="info-row"><span class="label">位置</span><span>{{ instrument.location || '-' }}</span></div>
         <div class="info-row"><span class="label">预约审批</span><span>{{ instrument.requires_approval ? '需要审批' : '自动批准' }}</span></div>
         <div v-if="instrument.price_per_hour" class="info-row"><span class="label">价格</span><span class="price">¥{{ instrument.price_per_hour }}/小时</span></div>
+        <div v-if="instrument.manager_name" class="info-row"><span class="label">管理人</span><span>{{ instrument.manager_name }}{{ instrument.manager_phone ? '（' + instrument.manager_phone + '）' : '' }}</span></div>
+        <div v-if="instrument.probe_type" class="info-row"><span class="label">探针类型</span><span>{{ instrument.probe_type }}</span></div>
       </div>
 
       <div v-if="instrument.description" class="detail-section">
@@ -31,6 +33,7 @@
         <BookingCalendar
           :instrument-id="instrument.id"
           :price-per-hour="instrument.price_per_hour"
+          :instrument-status="instrument.status"
           @saved="onBookingSaved"
         />
       </div>

@@ -11,6 +11,8 @@ class BookingCreate(BaseModel):
     purpose: str | None = None
     notes: str | None = None
     user_id: str | None = None
+    message: str | None = None
+    probe_type: str | None = None
 
 
 class BookingRead(BaseModel):
@@ -23,6 +25,8 @@ class BookingRead(BaseModel):
     purpose: str | None
     notes: str | None
     rejection_reason: str | None
+    message: str | None
+    probe_type: str | None
     created_at: datetime
     user_username: str | None = None
     user_full_name: str | None = None

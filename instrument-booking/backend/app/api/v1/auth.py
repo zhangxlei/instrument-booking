@@ -4,7 +4,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.deps import get_current_user
 from app.models.user import User
-from app.schemas.auth import LoginRequest, RefreshRequest, RegisterRequest, TokenResponse
+from app.schemas.auth import ChangePasswordRequest, ChangeUsernameRequest, LoginRequest, RefreshRequest, RegisterRequest, TokenResponse
+from app.schemas.common import MessageResponse
 from app.schemas.user import UserRead, UserUpdate
 from app.services import auth_service
 
@@ -42,3 +43,23 @@ async def update_me(
     if data.phone is not None:
         current_user.phone = data.phone
     return current_user
+
+
+@router.put("/me/password", response_model=MessageResponse)
+async def change_my_password(
+    data: ChangePasswordRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    await auth_service.change_password(db, current_user, data.old_password, data.new_password)
+    return MessageResponse(message="密码已修改")
+
+
+@router.put("/me/username", response_model=MessageResponse)
+async def change_my_username(
+    data: ChangeUsernameRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    await auth_service.change_username(db, current_user, data.new_username)
+    return MessageResponse(message="用户名已修改")
