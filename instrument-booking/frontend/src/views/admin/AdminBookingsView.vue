@@ -44,7 +44,7 @@
       <LoadingSpinner v-if="loading" text="加载中..." />
       <table v-else-if="allBookings.length > 0" class="data-table">
         <thead>
-          <tr><th style="width:36px"></th><th>用户</th><th>仪器</th><th>时间段</th><th>目的</th><th>状态</th><th>操作</th></tr>
+          <tr><th style="width:36px"></th><th>用户</th><th>仪器</th><th>时间段</th><th>目的</th><th>捎话</th><th>状态</th><th>操作</th></tr>
         </thead>
         <tbody>
           <tr v-for="b in allBookings" :key="b.id" :class="{ 'row-selected': selectedIds.includes(b.id) }">
@@ -53,6 +53,7 @@
             <td>{{ b.instrument_name || b.instrument_id.slice(0, 8) }}</td>
             <td>{{ formatTime(b.start_time) }} ~ {{ formatTime(b.end_time) }}</td>
             <td>{{ b.purpose || '-' }}</td>
+            <td>{{ b.message || '-' }}</td>
             <td><StatusBadge :status="b.status" /></td>
             <td class="actions">
               <button class="btn-modify" @click="startReschedule(b)">改期</button>

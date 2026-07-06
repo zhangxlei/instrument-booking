@@ -45,6 +45,10 @@
           <label>使用目的</label>
           <textarea v-model="purpose" placeholder="简述需要使用仪器的目的" rows="2" />
         </div>
+        <div class="form-group">
+          <label>捎话（给测试老师）</label>
+          <textarea v-model="message" placeholder="有什么需要告知测试老师的内容" rows="2" />
+        </div>
         <ErrorAlert :message="error" />
         <div class="form-actions">
           <button class="btn-cancel" @click="clearSelection">取消选择</button>
@@ -87,6 +91,7 @@ const allDays = ref<DaySlots[]>([])
 const loading = ref(true)
 const selectedSlots = ref<{ date: string; hour: number }[]>([])
 const purpose = ref('')
+const message = ref('')
 const submitting = ref(false)
 const error = ref<string | null>(null)
 const shiftAnchor = ref<{ date: string; hour: number } | null>(null)
@@ -270,6 +275,7 @@ function clearSelection() {
   selectedSlots.value = []
   shiftAnchor.value = null
   purpose.value = ''
+  message.value = ''
 }
 
 async function handleSubmit() {
@@ -282,6 +288,7 @@ async function handleSubmit() {
       start_time: selectedRange.value.start,
       end_time: selectedRange.value.end,
       purpose: purpose.value || undefined,
+      message: message.value || undefined,
     })
     clearSelection()
     emit('saved')
