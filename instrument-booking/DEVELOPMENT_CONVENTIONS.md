@@ -256,6 +256,57 @@ docker-compose up --build -d
 
 ---
 
+## Git 提交规范
+
+### Commit Message 格式
+
+```
+<类型>: <简短描述>
+```
+
+**类型说明：**
+
+| 类型 | 使用场景 |
+|---|---|
+| `feat` | 新功能 |
+| `fix` | 修复 Bug |
+| `refactor` | 重构代码，不改变功能 |
+| `style` | 样式调整、代码格式化 |
+| `docs` | 文档变更 |
+| `chore` | 配置、依赖、CI 等杂项 |
+
+**示例：**
+```
+feat: 新增仪器批量导出功能
+fix: 修复预约时间冲突检测不准确的问题
+refactor: 重构通知服务的发送逻辑
+docs: 更新 API 接口文档
+chore: 升级 bcrypt 依赖版本
+```
+
+### 分支管理
+
+| 分支 | 用途 |
+|---|---|
+| `main` | 稳定版本，随时可部署的代码 |
+| `dev` | 日常开发主分支 |
+| `feat/xxx` | 新功能分支，从 `dev` 拉取，完成后合并回 `dev` |
+| `fix/xxx` | Bug 修复分支，从 `dev` 拉取，完成后合并回 `dev` |
+
+**分支命名示例：**
+```
+feat/export-instruments
+feat/booking-calendar
+fix/conflict-detection
+fix/login-error
+```
+
+**开发流程：**
+
+```
+dev → feat/xxx → 开发完成 → 合并回 dev → 验证稳定后 → 合并到 main
+```
+
 ## 注意事项
 
 1. **Windows 上不要本地 pip install** — 编译型包（asyncpg、pydantic-core）需要 Rust/MSVC。使用 Docker 容器运行后端
