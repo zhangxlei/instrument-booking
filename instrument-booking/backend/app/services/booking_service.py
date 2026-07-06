@@ -269,8 +269,21 @@ async def admin_create_booking(db: AsyncSession, data) -> Booking:
     instrument = await db.get(Instrument, uuid.UUID(data.instrument_id))
     if instrument is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="仪器不存在")
+    if instrument.status == "retired":
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="仪器已报废")
+    if instrument.status == "maintenance":
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="仪器维护中")
     if data.end_time <= data.start_time:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="结束时间必须晚于开始时间")
+    if data.start_time <= datetime.now(timezone.utc):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="预约时间不能早于当前时间")
+
+    conflict = await _check_conflicts(db, instrument.id, data.start_time, data.end_time)
+    if conflict:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="该时段已被预约",
+        )
 
     user_id = uuid.UUID(data.user_id) if isinstance(data.user_id, str) else data.user_id
     status_val = "pending" if instrument.requires_approval else "approved"
