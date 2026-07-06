@@ -49,6 +49,13 @@
           <label>捎话（给测试老师）</label>
           <textarea v-model="message" placeholder="有什么需要告知测试老师的内容" rows="2" />
         </div>
+        <div class="form-group">
+          <label>选择审核人</label>
+          <select v-model="reviewerId">
+            <option value="">请选择审核人</option>
+            <option v-for="u in userList" :key="u.id" :value="u.id">{{ u.full_name }}({{ u.username }})</option>
+          </select>
+        </div>
         <ErrorAlert :message="error" />
         <div class="form-actions">
           <button class="btn-cancel" @click="clearSelection">取消选择</button>
@@ -65,6 +72,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { getAvailability } from '../../api/instruments'
 import { createBooking } from '../../api/bookings'
+import { getUsers } from '../../api/admin'
 import ErrorAlert from '../common/ErrorAlert.vue'
 
 const props = defineProps<{
@@ -92,6 +100,8 @@ const loading = ref(true)
 const selectedSlots = ref<{ date: string; hour: number }[]>([])
 const purpose = ref('')
 const message = ref('')
+const reviewerId = ref('')
+const userList = ref<{ id: string; username: string; full_name: string }[]>([])
 const submitting = ref(false)
 const error = ref<string | null>(null)
 const shiftAnchor = ref<{ date: string; hour: number } | null>(null)
@@ -276,6 +286,7 @@ function clearSelection() {
   shiftAnchor.value = null
   purpose.value = ''
   message.value = ''
+  reviewerId.value = ''
 }
 
 async function handleSubmit() {
@@ -289,6 +300,7 @@ async function handleSubmit() {
       end_time: selectedRange.value.end,
       purpose: purpose.value || undefined,
       message: message.value || undefined,
+      reviewer_id: reviewerId.value || undefined,
     })
     clearSelection()
     emit('saved')
@@ -299,7 +311,10 @@ async function handleSubmit() {
   }
 }
 
-onMounted(fetchAvailability)
+onMounted(async () => {
+  await fetchAvailability()
+  try { userList.value = await getUsers() } catch {}
+})
 </script>
 
 <style scoped>

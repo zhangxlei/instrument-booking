@@ -13,6 +13,7 @@ class BookingCreate(BaseModel):
     user_id: str | None = None
     message: str | None = None
     probe_type: str | None = None
+    reviewer_id: str | None = None
 
 
 class BookingRead(BaseModel):

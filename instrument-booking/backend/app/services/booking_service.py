@@ -53,7 +53,8 @@ async def create_booking(
     db.add(booking)
     await db.flush()
 
-    await create_review(db, booking.id)
+    reviewer_id = uuid.UUID(data.reviewer_id) if data.reviewer_id else None
+    await create_review(db, booking.id, reviewer_id)
 
     time_str = f"{data.start_time.strftime('%m/%d %H:%M')}"
     await create_notification(db, user_id, "booking_pending",
@@ -301,7 +302,8 @@ async def admin_create_booking(db: AsyncSession, data) -> Booking:
     db.add(booking)
     await db.flush()
 
-    await create_review(db, booking.id)
+    reviewer_id = uuid.UUID(data.reviewer_id) if data.reviewer_id else None
+    await create_review(db, booking.id, reviewer_id)
 
     time_str = f"{data.start_time.strftime('%m/%d %H:%M')}"
     await create_notification(db, user_id, "booking_pending",

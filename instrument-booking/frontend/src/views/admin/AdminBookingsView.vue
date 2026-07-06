@@ -44,7 +44,7 @@
       <LoadingSpinner v-if="loading" text="加载中..." />
       <table v-else-if="allBookings.length > 0" class="data-table">
         <thead>
-          <tr><th style="width:36px"></th><th>用户</th><th>仪器</th><th>时间段</th><th>目的</th><th>捎话</th><th>状态</th><th>操作</th></tr>
+          <tr><th style="width:36px"></th><th>用户</th><th>仪器</th><th>时间段</th><th>目的</th><th>捎话</th><th>状态</th><th>审批流程</th><th>操作</th></tr>
         </thead>
         <tbody>
           <tr v-for="b in allBookings" :key="b.id" :class="{ 'row-selected': selectedIds.includes(b.id) }">
@@ -55,6 +55,9 @@
             <td>{{ b.purpose || '-' }}</td>
             <td>{{ b.message || '-' }}</td>
             <td><StatusBadge :status="b.status" /></td>
+            <td>
+              <button class="btn-flow" @click="openReviewDialog(b)">审批流程</button>
+            </td>
             <td class="actions">
               <button class="btn-modify" @click="startReschedule(b)">改期</button>
               <button class="btn-cancel" @click="handleAdminCancel(b.id)">取消</button>
@@ -81,6 +84,55 @@
         <div class="form-actions">
           <button class="btn-cancel" @click="rescheduleTarget = null">取消</button>
           <button class="btn-primary" @click="confirmReschedule">确认改期</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Approval Flow Dialog -->
+    <div v-if="showReviewDialog" class="dialog-overlay" @click.self="showReviewDialog = false">
+      <div class="dialog">
+        <h3>审批流程 - {{ reviewTarget?.user_full_name || reviewTarget?.user_username }}</h3>
+
+        <BookingFlowStatus :status="reviewTarget?.status" :review="currentReview" />
+
+        <div v-if="currentReview" class="review-detail">
+          <div class="form-group">
+            <label>当前状态</label>
+            <p class="review-status">{{ reviewStatusText }}</p>
+          </div>
+          <div class="form-group">
+            <label>分配审核人</label>
+            <div class="assign-row">
+              <select v-model="assignReviewerId">
+                <option value="">请选择</option>
+                <option v-for="u in users" :key="u.id" :value="u.id">{{ u.full_name }}({{ u.username }})</option>
+              </select>
+              <button class="btn-primary btn-small" :disabled="!assignReviewerId" @click="handleAssignReviewer">确认分配</button>
+            </div>
+            <div v-if="currentReview.reviewer_id" class="assigned-info">已分配：{{ getUserName(currentReview.reviewer_id) }}</div>
+          </div>
+          <div class="form-group">
+            <label>分配测试老师</label>
+            <div class="assign-row">
+              <select v-model="assignTesterId">
+                <option value="">请选择</option>
+                <option v-for="u in users" :key="u.id" :value="u.id">{{ u.full_name }}({{ u.username }})</option>
+              </select>
+              <button class="btn-primary btn-small" :disabled="!assignTesterId" @click="handleAssignTester">确认分配</button>
+            </div>
+            <div v-if="currentReview.tester_id" class="assigned-info">已分配：{{ getUserName(currentReview.tester_id) }}</div>
+          </div>
+          <div v-if="currentReview.status === 'pending_review'" class="form-group">
+            <label>审核操作</label>
+            <div class="assign-row">
+              <input v-model="reviewComment" placeholder="审核意见（选填）" />
+              <button class="btn-approve" @click="handleReviewApprove">通过</button>
+              <button class="btn-reject" @click="handleReviewReject">拒绝</button>
+            </div>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn-cancel" @click="showReviewDialog = false">关闭</button>
         </div>
       </div>
     </div>
@@ -127,15 +179,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { getAdminBookings, approveBooking, rejectBooking, adminRescheduleBooking, adminCancelBooking, adminCreateBooking, exportBookingsExcel, batchCancelBookings, getUsers, type UserAdmin } from '../../api/admin'
 import { getInstruments, type InstrumentRead } from '../../api/instruments'
 import type { BookingRead } from '../../api/bookings'
 import BookingApprovalTable from '../../components/admin/BookingApprovalTable.vue'
 import ConfirmDialog from '../../components/common/ConfirmDialog.vue'
 import LoadingSpinner from '../../components/common/LoadingSpinner.vue'
+import BookingFlowStatus from '../../components/bookings/BookingFlowStatus.vue'
 import EmptyState from '../../components/common/EmptyState.vue'
 import StatusBadge from '../../components/common/StatusBadge.vue'
+import client from '../../api/client'
 
 const pending = ref<BookingRead[]>([])
 const allBookings = ref<BookingRead[]>([])
@@ -159,6 +213,92 @@ const bookForStart = ref('')
 const bookForEnd = ref('')
 const bookForPurpose = ref('')
 const bookForSubmitting = ref(false)
+
+// Review dialog
+const showReviewDialog = ref(false)
+const reviewTarget = ref<BookingRead | null>(null)
+const currentReview = ref<any>(null)
+const assignReviewerId = ref('')
+const assignTesterId = ref('')
+const reviewComment = ref('')
+
+function getUserName(id: string | null | undefined): string {
+  if (!id) return '-'
+  const u = users.value.find((u) => u.id === id)
+  return u ? `${u.full_name}(${u.username})` : id.slice(0, 8)
+}
+
+const reviewStatusText = computed(() => {
+  const map: Record<string, string> = {
+    pending_review: '待审核',
+    review_approved: '审核通过',
+    review_rejected: '审核拒绝',
+    testing: '测试中',
+    completed: '已完成',
+    cancelled: '已取消',
+  }
+  return currentReview.value ? map[currentReview.value.status] || currentReview.value.status : '-'
+})
+
+async function openReviewDialog(b: BookingRead) {
+  reviewTarget.value = b
+  assignReviewerId.value = ''
+  assignTesterId.value = ''
+  reviewComment.value = ''
+  try {
+    const res = await client.get(`/booking-reviews/${b.id}`)
+    currentReview.value = res.data
+  } catch { currentReview.value = null }
+  showReviewDialog.value = true
+}
+
+async function handleAssignReviewer() {
+  if (!reviewTarget.value || !assignReviewerId.value) return
+  try {
+    await client.put(`/booking-reviews/${reviewTarget.value.id}/assign-reviewer`, { reviewer_id: assignReviewerId.value })
+    const res = await client.get(`/booking-reviews/${reviewTarget.value.id}`)
+    currentReview.value = res.data
+    assignReviewerId.value = ''
+  } catch (e: any) {
+    alert(e.response?.data?.detail || '分配失败')
+  }
+}
+
+async function handleAssignTester() {
+  if (!reviewTarget.value || !assignTesterId.value) return
+  try {
+    await client.put(`/booking-reviews/${reviewTarget.value.id}/assign-tester`, { tester_id: assignTesterId.value })
+    const res = await client.get(`/booking-reviews/${reviewTarget.value.id}`)
+    currentReview.value = res.data
+    assignTesterId.value = ''
+  } catch (e: any) {
+    alert(e.response?.data?.detail || '分配失败')
+  }
+}
+
+async function handleReviewApprove() {
+  if (!reviewTarget.value) return
+  try {
+    await client.put(`/booking-reviews/${reviewTarget.value.id}/approve`, { comment: reviewComment.value || null })
+    const res = await client.get(`/booking-reviews/${reviewTarget.value.id}`)
+    currentReview.value = res.data
+    reviewComment.value = ''
+  } catch (e: any) {
+    alert(e.response?.data?.detail || '操作失败')
+  }
+}
+
+async function handleReviewReject() {
+  if (!reviewTarget.value) return
+  try {
+    await client.put(`/booking-reviews/${reviewTarget.value.id}/reject`, { comment: reviewComment.value || null })
+    const res = await client.get(`/booking-reviews/${reviewTarget.value.id}`)
+    currentReview.value = res.data
+    reviewComment.value = ''
+  } catch (e: any) {
+    alert(e.response?.data?.detail || '操作失败')
+  }
+}
 
 // Batch cancel
 const selectedIds = ref<string[]>([])
@@ -354,6 +494,25 @@ h2 { font-size: 22px; color: #1e293b; }
   font-size: 12px;
 }
 .btn-batch-cancel:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-flow {
+  padding: 4px 10px;
+  border: 1px solid #c4b5fd;
+  border-radius: 4px;
+  background: white;
+  color: #7c3aed;
+  cursor: pointer;
+  font-size: 12px;
+}
+.btn-flow:hover { background: #f5f3ff; }
+.review-detail { margin-top: 12px; }
+.review-status { font-size: 14px; font-weight: 500; color: #1e293b; }
+.assign-row { display: flex; gap: 6px; align-items: center; }
+.assign-row select { flex: 1; padding: 6px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 13px; }
+.assign-row input { flex: 1; padding: 6px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 13px; }
+.btn-small { padding: 6px 12px !important; font-size: 12px !important; }
+.btn-approve { padding: 6px 12px; background: #059669; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; }
+.btn-reject { padding: 6px 12px; background: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; }
+.assigned-info { font-size: 12px; color: #64748b; margin-top: 4px; }
 .row-selected { background: #eff6ff; }
 .data-table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; }
 .data-table th { background: #f8fafc; padding: 10px 12px; text-align: left; font-size: 13px; color: #64748b; font-weight: 600; border-bottom: 1px solid #e2e8f0; }

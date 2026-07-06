@@ -26,6 +26,7 @@ export interface BookingCreate {
   notes?: string
   message?: string
   probe_type?: string
+  reviewer_id?: string
 }
 
 export async function getBookings(status?: string): Promise<BookingRead[]> {
