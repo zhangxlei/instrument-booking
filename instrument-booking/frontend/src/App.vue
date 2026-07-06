@@ -33,11 +33,10 @@ const showNotice = ref(false)
 
 function dismissNotice() {
   showNotice.value = false
-  localStorage.setItem('login_notice_v2', '1')
 }
 
 function checkNotice() {
-  if (!localStorage.getItem('login_notice_v2') && authStore.isLoggedIn()) {
+  if (authStore.isLoggedIn()) {
     showNotice.value = true
   }
 }
