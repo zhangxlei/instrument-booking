@@ -4,7 +4,6 @@
     <div class="navbar-menu">
       <router-link to="/bookings" class="nav-link">我的预约</router-link>
       <router-link v-if="authStore.isAdmin()" to="/admin" class="nav-link">管理后台</router-link>
-      <a href="http://10.201.5.107:8000/" target="_blank" class="nav-link">FTP文件库</a>
       <NotificationBell :unread-count="unreadCount" @refresh="refreshUnread" />
       <span class="user-name">{{ authStore.user?.username || authStore.user?.full_name }}</span>
       <button class="btn-link" @click="showPasswordDialog = true">修改密码</button>

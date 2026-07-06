@@ -6,6 +6,8 @@
         <a href="mailto:admin@example.com">admin@example.com</a>
         <span class="footer-sep">|</span>
         <a href="tel:021-12345678">021-12345678</a>
+        <span class="footer-sep">|</span>
+        友情链接：<a href="http://10.201.5.107:8000/" target="_blank">FTP文件库</a>
       </span>
     </div>
   </footer>
