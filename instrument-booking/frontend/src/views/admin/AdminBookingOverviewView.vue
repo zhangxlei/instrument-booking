@@ -134,8 +134,8 @@ function getSlotBooking(date: string, hour: number): BookingItem | undefined {
   const time = `${String(hour).padStart(2, '0')}:00`
   return bookings.value.find((b) => {
     const bDate = b.start_time.slice(0, 10)
-    const bHour = b.start_time.slice(11, 13)
-    return bDate === date && bHour === time
+    const bTime = b.start_time.slice(11, 16)
+    return bDate === date && bTime === time
   })
 }
 
