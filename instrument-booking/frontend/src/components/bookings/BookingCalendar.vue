@@ -383,9 +383,8 @@ onMounted(async () => {
   grid-template-columns: 60px repeat(7, 1fr);
   border: 1px solid #e2e8f0;
   border-radius: 8px;
-  overflow: auto;
+  overflow: visible;
   background: white;
-  max-height: 600px;
 }
 .cal-header-row {
   display: contents;
@@ -415,12 +414,13 @@ onMounted(async () => {
   background: #fafafa;
 }
 .cal-slot {
-  padding: 4px;
+  padding: 2px 4px;
   border-right: 1px solid #f1f5f9;
   border-bottom: 1px solid #f1f5f9;
-  min-height: 32px;
+  min-height: 24px;
   cursor: default;
-  font-size: 11px;
+  font-size: 10px;
+  line-height: 1.2;
   transition: background 0.1s;
 }
 .cal-slot.available { background: #f0fdf4; cursor: pointer; }

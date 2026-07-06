@@ -242,13 +242,12 @@ onMounted(async () => {
   grid-template-columns: 60px repeat(7, 1fr);
   border: 1px solid #e2e8f0;
   border-radius: 8px;
-  overflow: auto;
+  overflow: visible;
   background: white;
-  max-height: 600px;
 }
 .cal-header-row { display: contents; }
 .cal-time-header, .cal-day-header {
-  padding: 8px 4px; text-align: center; font-size: 12px;
+  padding: 6px 2px; text-align: center; font-size: 11px;
   background: #f8fafc; border-bottom: 1px solid #e2e8f0;
   font-weight: 600; color: #475569; position: sticky; top: 0; z-index: 2;
 }
@@ -257,14 +256,14 @@ onMounted(async () => {
 .day-date { font-size: 13px; }
 .cal-row { display: contents; }
 .cal-time {
-  padding: 8px 4px; font-size: 11px; color: #94a3b8;
+  padding: 6px 4px; font-size: 10px; color: #94a3b8;
   text-align: center; border-right: 1px solid #f1f5f9;
   border-bottom: 1px solid #f1f5f9; background: #fafafa;
 }
 .cal-slot {
-  padding: 4px; border-right: 1px solid #f1f5f9;
-  border-bottom: 1px solid #f1f5f9; min-height: 36px;
-  cursor: default; font-size: 11px;
+  padding: 2px 4px; border-right: 1px solid #f1f5f9;
+  border-bottom: 1px solid #f1f5f9; min-height: 24px;
+  cursor: default; font-size: 10px; line-height: 1.2;
 }
 .cal-slot.empty { background: #fafafa; }
 .cal-slot.pending { background: #fef9c3; }
