@@ -9,6 +9,7 @@ from app.models.booking import Booking
 from app.models.instrument import Instrument, InstrumentMaintenance
 from app.models.user import User
 from app.schemas.booking import BookingCreate
+from app.services.booking_review_service import create_review
 from app.services.notification_service import create_notification
 
 
@@ -51,6 +52,8 @@ async def create_booking(
     )
     db.add(booking)
     await db.flush()
+
+    await create_review(db, booking.id)
 
     time_str = f"{data.start_time.strftime('%m/%d %H:%M')}"
     await create_notification(db, user_id, "booking_pending",
@@ -284,6 +287,8 @@ async def admin_create_booking(db: AsyncSession, data) -> Booking:
     )
     db.add(booking)
     await db.flush()
+
+    await create_review(db, booking.id)
 
     time_str = f"{data.start_time.strftime('%m/%d %H:%M')}"
     await create_notification(db, user_id, "booking_pending",

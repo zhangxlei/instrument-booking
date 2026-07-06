@@ -43,6 +43,7 @@ class Booking(TimestampMixin, Base):
     user = relationship("User", back_populates="bookings", foreign_keys=[user_id])
     approver = relationship("User", back_populates="approved_bookings", foreign_keys=[approved_by])
     instrument = relationship("Instrument", back_populates="bookings")
+    reviews = relationship("BookingReview", back_populates="booking")
 
     # Transient fields (not persisted, populated at query time)
     user_username: ClassVar[str | None] = None

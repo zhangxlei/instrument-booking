@@ -267,6 +267,52 @@ async def admin_set_user_username(
     return MessageResponse(message="用户名已修改")
 
 
+@router.get("/instruments/booking-overview")
+async def booking_overview(
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_admin),
+):
+    from app.models.booking import Booking
+
+    instruments = await db.execute(select(Instrument).order_by(Instrument.name))
+    result = []
+    for inst in instruments.scalars().all():
+        today = datetime.now(timezone.utc)
+        counts = await db.execute(
+            select(
+                func.count(Booking.id).filter(Booking.status == "pending"),
+                func.count(Booking.id).filter(Booking.status == "approved"),
+                func.count(Booking.id).filter(Booking.status == "cancelled"),
+            ).where(Booking.instrument_id == inst.id)
+        )
+        row = counts.one()
+        upcoming = await db.execute(
+            select(Booking).where(
+                Booking.instrument_id == inst.id,
+                Booking.status.in_(["pending", "approved"]),
+                Booking.start_time >= today,
+            ).order_by(Booking.start_time).limit(3)
+        )
+        next_bookings = []
+        for b in upcoming.scalars().all():
+            next_bookings.append({
+                "start_time": b.start_time.isoformat(),
+                "end_time": b.end_time.isoformat(),
+                "status": b.status,
+            })
+
+        result.append({
+            "id": str(inst.id),
+            "name": inst.name,
+            "status": inst.status,
+            "pending_count": row[0],
+            "approved_count": row[1],
+            "cancelled_count": row[2],
+            "next_bookings": next_bookings,
+        })
+    return result
+
+
 @router.delete("/users/{user_id}", response_model=MessageResponse)
 async def admin_delete_user(
     user_id: uuid.UUID,

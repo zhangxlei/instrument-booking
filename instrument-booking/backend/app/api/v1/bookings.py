@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.deps import get_current_user
 from app.models.user import User
+from app.schemas.attachment import AttachmentInfo
 from app.schemas.booking import BookingCreate, BookingRead, BookingUpdate
 from app.schemas.common import MessageResponse
 from app.services import booking_service
@@ -65,3 +66,75 @@ async def cancel_booking(
 ):
     await booking_service.cancel_booking(db, booking_id, current_user.id)
     return MessageResponse(message="预约已取消")
+
+
+import os
+from fastapi import UploadFile, HTTPException, status
+from fastapi.responses import FileResponse
+from app.models.booking_document import BookingDocument
+
+
+@router.post("/{booking_id}/documents", response_model=AttachmentInfo, status_code=201)
+async def upload_booking_document(
+    booking_id: uuid.UUID,
+    file: UploadFile,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    os.makedirs("uploads/booking_docs", exist_ok=True)
+    import uuid as uuid_lib
+    ext = file.filename.rsplit(".", 1)[-1].lower() if file.filename and "." in file.filename else ""
+    stored_name = f"{uuid_lib.uuid4()}.{ext}" if ext else str(uuid_lib.uuid4())
+    file_path = os.path.join("uploads/booking_docs", stored_name)
+    content = await file.read()
+    with open(file_path, "wb") as f:
+        f.write(content)
+
+    doc = BookingDocument(
+        booking_id=booking_id,
+        filename=stored_name,
+        original_filename=file.filename or stored_name,
+        file_size=len(content),
+        file_type=file.content_type,
+        uploaded_by=current_user.id,
+    )
+    db.add(doc)
+    await db.flush()
+    return doc
+
+
+@router.get("/{booking_id}/documents", response_model=list[AttachmentInfo])
+async def list_booking_documents(
+    booking_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_user),
+):
+    from sqlalchemy import select
+    from app.models.booking_document import BookingDocument
+    result = await db.execute(
+        select(BookingDocument).where(BookingDocument.booking_id == booking_id).order_by(BookingDocument.created_at.desc())
+    )
+    return result.scalars().all()
+
+
+@router.get("/{booking_id}/documents/{doc_id}")
+async def download_booking_document(
+    booking_id: uuid.UUID,
+    doc_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_user),
+):
+    from sqlalchemy import select
+    from app.models.booking_document import BookingDocument
+    result = await db.execute(
+        select(BookingDocument).where(BookingDocument.id == doc_id, BookingDocument.booking_id == booking_id)
+    )
+    doc = result.scalar_one_or_none()
+    if doc is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="文档不存在")
+    file_path = os.path.join("uploads/booking_docs", doc.filename)
+    return FileResponse(
+        file_path,
+        filename=doc.original_filename,
+        media_type=doc.file_type or "application/octet-stream",
+    )

@@ -6,6 +6,9 @@
     <router-link to="/admin/instruments" class="sidebar-item" active-class="active">
       仪器管理
     </router-link>
+    <router-link to="/admin/booking-overview" class="sidebar-item" active-class="active">
+      预约总览
+    </router-link>
     <router-link to="/admin/bookings" class="sidebar-item" active-class="active">
       预约管理
     </router-link>
