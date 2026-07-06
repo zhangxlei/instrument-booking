@@ -22,7 +22,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from './stores/auth'
 import { getMe } from './api/auth'
@@ -33,8 +33,18 @@ const showNotice = ref(false)
 
 function dismissNotice() {
   showNotice.value = false
-  localStorage.setItem('login_notice_read', '1')
+  localStorage.setItem('login_notice_v2', '1')
 }
+
+function checkNotice() {
+  if (!localStorage.getItem('login_notice_v2') && authStore.isLoggedIn()) {
+    showNotice.value = true
+  }
+}
+
+watch(() => authStore.token, () => {
+  setTimeout(checkNotice, 500)
+})
 
 onMounted(async () => {
   if (authStore.isLoggedIn() && !authStore.user) {
@@ -50,10 +60,7 @@ onMounted(async () => {
       authStore.logout()
     }
   }
-
-  if (!localStorage.getItem('login_notice_read') && authStore.isLoggedIn()) {
-    showNotice.value = true
-  }
+  checkNotice()
 })
 </script>
 
