@@ -17,8 +17,7 @@
           <td>{{ formatTime(b.start_time) }} ~ {{ formatTime(b.end_time) }}</td>
           <td>{{ b.purpose || '-' }}</td>
           <td class="actions">
-            <button class="btn-approve" :disabled="processing" @click="$emit('approve', b.id)">批准</button>
-            <button class="btn-reject" :disabled="processing" @click="$emit('reject', b)">拒绝</button>
+            <button class="btn-flow" @click="$emit('review', b)">审批流程</button>
           </td>
         </tr>
       </tbody>
@@ -37,8 +36,7 @@ defineProps<{
 }>()
 
 defineEmits<{
-  approve: [id: string]
-  reject: [booking: BookingRead]
+  review: [booking: BookingRead]
 }>()
 
 function formatTime(iso: string): string {
@@ -52,8 +50,6 @@ function formatTime(iso: string): string {
 .data-table th { background: #f8fafc; padding: 10px 12px; text-align: left; font-size: 13px; color: #64748b; font-weight: 600; border-bottom: 1px solid #e2e8f0; }
 .data-table td { padding: 10px 12px; font-size: 13px; border-bottom: 1px solid #f1f5f9; }
 .actions { display: flex; gap: 6px; }
-.btn-approve, .btn-reject { padding: 4px 12px; border-radius: 4px; border: 1px solid; cursor: pointer; font-size: 13px; background: white; }
-.btn-approve { color: #166534; border-color: #bbf7d0; }
-.btn-reject { color: #dc2626; border-color: #fecaca; }
-.btn-approve:disabled, .btn-reject:disabled { opacity: 0.4; }
+.btn-flow { padding: 4px 12px; border-radius: 4px; border: 1px solid #c4b5fd; cursor: pointer; font-size: 13px; background: white; color: #7c3aed; }
+.btn-flow:hover { background: #f5f3ff; }
 </style>

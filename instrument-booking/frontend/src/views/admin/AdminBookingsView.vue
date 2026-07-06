@@ -13,24 +13,13 @@
       <BookingApprovalTable
         :bookings="pending"
         :processing="processing"
-        @approve="handleApprove"
-        @reject="handleReject"
+        @review="openReviewDialog"
       />
     </div>
     <div v-else class="section">
       <h3>待审批</h3>
       <EmptyState title="暂无待审批预约" />
     </div>
-
-    <ConfirmDialog
-      :visible="showRejectDialog"
-      title="拒绝预约"
-      :message="'请输入拒绝原因'"
-      confirm-text="确认拒绝"
-      :danger="true"
-      @confirm="confirmReject"
-      @cancel="showRejectDialog = false"
-    />
 
     <div class="section">
       <h3>全部预约</h3>
@@ -44,7 +33,7 @@
       <LoadingSpinner v-if="loading" text="加载中..." />
       <table v-else-if="allBookings.length > 0" class="data-table">
         <thead>
-          <tr><th style="width:36px"></th><th>用户</th><th>仪器</th><th>时间段</th><th>目的</th><th>捎话</th><th>状态</th><th>审批流程</th><th>操作</th></tr>
+          <tr><th style="width:36px"></th><th>用户</th><th>仪器</th><th>时间段</th><th>目的</th><th>捎话</th><th>状态</th><th>操作</th></tr>
         </thead>
         <tbody>
           <tr v-for="b in allBookings" :key="b.id" :class="{ 'row-selected': selectedIds.includes(b.id) }">
@@ -55,9 +44,6 @@
             <td>{{ b.purpose || '-' }}</td>
             <td>{{ b.message || '-' }}</td>
             <td><StatusBadge :status="b.status" /></td>
-            <td>
-              <button class="btn-flow" @click="openReviewDialog(b)">审批流程</button>
-            </td>
             <td class="actions">
               <button class="btn-modify" @click="startReschedule(b)">改期</button>
               <button class="btn-cancel" @click="handleAdminCancel(b.id)">取消</button>
@@ -100,16 +86,9 @@
             <label>当前状态</label>
             <p class="review-status">{{ reviewStatusText }}</p>
           </div>
-          <div class="form-group">
-            <label>分配审核人</label>
-            <div class="assign-row">
-              <select v-model="assignReviewerId">
-                <option value="">请选择</option>
-                <option v-for="u in users" :key="u.id" :value="u.id">{{ u.full_name }}({{ u.username }})</option>
-              </select>
-              <button class="btn-primary btn-small" :disabled="!assignReviewerId" @click="handleAssignReviewer">确认分配</button>
-            </div>
-            <div v-if="currentReview.reviewer_id" class="assigned-info">已分配：{{ getUserName(currentReview.reviewer_id) }}</div>
+          <div v-if="currentReview.reviewer_id" class="form-group">
+            <label>审核人</label>
+            <p>{{ getUserName(currentReview.reviewer_id) }}</p>
           </div>
           <div class="form-group">
             <label>分配测试老师</label>
@@ -129,6 +108,10 @@
               <button class="btn-approve" @click="handleReviewApprove">通过</button>
               <button class="btn-reject" @click="handleReviewReject">拒绝</button>
             </div>
+          </div>
+          <div v-if="currentReview.reviewer_comment" class="form-group">
+            <label>审核意见</label>
+            <p class="assigned-info">{{ currentReview.reviewer_comment }}</p>
           </div>
         </div>
         <div class="form-actions">
@@ -180,7 +163,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { getAdminBookings, approveBooking, rejectBooking, adminRescheduleBooking, adminCancelBooking, adminCreateBooking, exportBookingsExcel, batchCancelBookings, getUsers, type UserAdmin } from '../../api/admin'
+import { getAdminBookings, adminRescheduleBooking, adminCancelBooking, adminCreateBooking, exportBookingsExcel, batchCancelBookings, getUsers, type UserAdmin } from '../../api/admin'
 import { getInstruments, type InstrumentRead } from '../../api/instruments'
 import type { BookingRead } from '../../api/bookings'
 import BookingApprovalTable from '../../components/admin/BookingApprovalTable.vue'
@@ -197,8 +180,6 @@ const users = ref<UserAdmin[]>([])
 const instruments = ref<InstrumentRead[]>([])
 const loading = ref(true)
 const processing = ref(false)
-const showRejectDialog = ref(false)
-const selectedBooking = ref<BookingRead | null>(null)
 
 // Reschedule
 const rescheduleTarget = ref<BookingRead | null>(null)
@@ -349,31 +330,6 @@ async function load() {
     instruments.value = inst
   } catch {}
   loading.value = false
-}
-
-async function handleApprove(id: string) {
-  processing.value = true
-  try {
-    await approveBooking(id)
-    await load()
-  } finally { processing.value = false }
-}
-
-function handleReject(booking: BookingRead) {
-  selectedBooking.value = booking
-  showRejectDialog.value = true
-}
-
-async function confirmReject() {
-  if (!selectedBooking.value) return
-  const reason = prompt('请输入拒绝原因：')
-  if (!reason) return
-  processing.value = true
-  try {
-    await rejectBooking(selectedBooking.value.id, reason)
-    showRejectDialog.value = false
-    await load()
-  } finally { processing.value = false }
 }
 
 function startReschedule(booking: BookingRead) {
