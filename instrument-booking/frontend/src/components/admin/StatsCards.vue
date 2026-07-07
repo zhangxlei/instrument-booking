@@ -38,33 +38,51 @@ defineEmits<{
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
+  gap: var(--space-md);
 }
+
 .stat-card {
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 20px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
   text-align: center;
   cursor: pointer;
-  transition: box-shadow 0.15s;
+  transition: all var(--transition-normal);
 }
+
 .stat-card:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--color-primary-light);
 }
+
 .stat-card.highlight {
-  border-color: #fbbf24;
-  background: #fffbeb;
+  border-color: var(--color-warning);
+  background: var(--color-warning-bg);
 }
+
+.stat-card.highlight:hover {
+  border-color: var(--color-warning);
+  box-shadow: 0 10px 15px -3px rgba(245, 158, 11, 0.2);
+}
+
 .stat-value {
-  font-size: 32px;
+  font-size: 36px;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--color-text);
   margin: 0;
+  line-height: 1;
 }
+
+.stat-card.highlight .stat-value {
+  color: #B45309;
+}
+
 .stat-label {
   font-size: 14px;
-  color: #64748b;
-  margin: 4px 0 0;
+  color: var(--color-text-secondary);
+  margin: var(--space-sm) 0 0;
+  font-weight: 500;
 }
 </style>

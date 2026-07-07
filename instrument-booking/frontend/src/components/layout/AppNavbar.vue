@@ -41,52 +41,84 @@ function onPasswordChanged() {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 56px;
-  padding: 0 24px;
-  background: #1e293b;
-  color: white;
+  height: 64px;
+  padding: 0 var(--space-lg);
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--color-border);
   position: sticky;
   top: 0;
   z-index: 100;
+  transition: box-shadow var(--transition-normal);
 }
+
+.navbar:hover {
+  box-shadow: var(--shadow-md);
+}
+
 .user-name {
-  color: #e2e8f0;
+  color: var(--color-text-secondary);
   font-size: 14px;
+  font-weight: 500;
 }
+
 .navbar-brand {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
-  color: white;
+  color: var(--color-text);
   text-decoration: none;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin-right: 16px;
+  margin-right: var(--space-md);
+  transition: color var(--transition-fast);
 }
+
 .navbar-brand:hover {
-  color: #e2e8f0;
+  color: var(--color-primary);
 }
+
 .navbar-menu {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: var(--space-md);
 }
+
 .nav-link {
-  color: #94a3b8;
+  color: var(--color-text-secondary);
   text-decoration: none;
   font-size: 14px;
+  font-weight: 500;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
 }
+
 .nav-link:hover {
-  color: white;
+  color: var(--color-primary);
+  background: var(--color-primary-50);
 }
+
+.nav-link.router-link-active {
+  color: var(--color-primary);
+  background: var(--color-primary-100);
+}
+
 .btn-link {
   background: none;
   border: none;
-  color: #94a3b8;
+  color: var(--color-text-secondary);
   cursor: pointer;
   font-size: 14px;
+  font-weight: 500;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
 }
+
 .btn-link:hover {
-  color: white;
+  color: var(--color-primary);
+  background: var(--color-primary-50);
 }
 </style>

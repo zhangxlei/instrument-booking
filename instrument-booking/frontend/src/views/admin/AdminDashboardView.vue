@@ -30,5 +30,14 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-h2 { font-size: 22px; color: #1e293b; margin: 0 0 20px; }
+.dashboard {
+  animation: fadeIn var(--transition-slow) ease;
+}
+
+h2 {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0 0 var(--space-lg);
+}
 </style>

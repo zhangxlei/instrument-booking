@@ -45,75 +45,111 @@ const statusText = computed(() => {
 <style scoped>
 .instrument-card {
   display: flex;
-  gap: 16px;
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 16px;
+  gap: var(--space-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md);
   cursor: pointer;
-  transition: box-shadow 0.15s;
+  transition: all var(--transition-normal);
 }
+
 .instrument-card:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--color-primary-light);
 }
+
 .card-left {
   flex-shrink: 0;
 }
+
 .card-image {
   width: 80px;
   height: 80px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   overflow: hidden;
 }
+
 .card-image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform var(--transition-normal);
 }
+
+.instrument-card:hover .card-image img {
+  transform: scale(1.05);
+}
+
 .card-image.placeholder {
-  background: #f1f5f9;
+  background: var(--color-primary-50);
   display: flex;
   align-items: center;
   justify-content: center;
 }
+
 .card-body {
   flex: 1;
   min-width: 0;
 }
+
 .card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 4px;
+  margin-bottom: var(--space-xs);
 }
+
 .card-name {
   font-size: 16px;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--color-text);
   margin: 0;
+  transition: color var(--transition-fast);
 }
+
+.instrument-card:hover .card-name {
+  color: var(--color-primary);
+}
+
 .status-badge {
   font-size: 12px;
-  padding: 2px 8px;
-  border-radius: 10px;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
   font-weight: 500;
 }
-.status-badge.available { background: #dcfce7; color: #166534; }
-.status-badge.maintenance { background: #fef9c3; color: #854d0e; }
-.status-badge.retired { background: #f1f5f9; color: #64748b; }
+
+.status-badge.available { 
+  background: var(--color-success-bg); 
+  color: #047857; 
+}
+
+.status-badge.maintenance { 
+  background: var(--color-warning-bg); 
+  color: #B45309; 
+}
+
+.status-badge.retired { 
+  background: var(--color-bg); 
+  color: var(--color-text-secondary); 
+}
+
 .card-location, .card-price {
   font-size: 13px;
-  color: #64748b;
+  color: var(--color-text-secondary);
   margin: 2px 0;
 }
+
 .card-price {
-  color: #059669;
-  font-weight: 500;
+  color: var(--color-success);
+  font-weight: 600;
 }
+
 .card-desc {
   font-size: 13px;
-  color: #94a3b8;
-  margin: 4px 0 0;
+  color: var(--color-text-muted);
+  margin: var(--space-xs) 0 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
