@@ -10,12 +10,12 @@ defineProps<{ message: string | null }>()
 
 <style scoped>
 .error-alert {
-  background: #fef2f2;
-  color: #dc2626;
-  border: 1px solid #fecaca;
-  border-radius: 6px;
-  padding: 10px 14px;
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+  border: 1px solid #FECACA;
+  border-radius: var(--radius-md);
+  padding: var(--space-sm) var(--space-md);
   font-size: 14px;
-  margin-bottom: 16px;
+  margin-bottom: var(--space-md);
 }
 </style>

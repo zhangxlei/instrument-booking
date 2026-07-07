@@ -26,26 +26,32 @@
 
 <style scoped>
 .sidebar {
-  width: 200px;
-  background: white;
-  border-right: 1px solid #e2e8f0;
-  padding: 12px 0;
-  min-height: calc(100vh - 56px);
+  width: 220px;
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+  padding: var(--space-md) 0;
+  min-height: calc(100vh - 64px);
 }
+
 .sidebar-item {
   display: block;
-  padding: 10px 20px;
+  padding: var(--space-sm) var(--space-lg);
   font-size: 14px;
-  color: #475569;
-  text-decoration: none;
-  transition: background 0.1s;
-}
-.sidebar-item:hover {
-  background: #f1f5f9;
-}
-.sidebar-item.active {
-  background: #eff6ff;
-  color: #3b82f6;
   font-weight: 500;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  transition: all var(--transition-fast);
+  border-left: 3px solid transparent;
+}
+
+.sidebar-item:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text);
+}
+
+.sidebar-item.active {
+  background: var(--color-primary-50);
+  color: var(--color-primary);
+  border-left-color: var(--color-primary);
 }
 </style>

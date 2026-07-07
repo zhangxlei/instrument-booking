@@ -56,21 +56,36 @@ async function handleDelete() {
 <style scoped>
 .admin-form-page {
   max-width: 700px;
+  animation: fadeIn var(--transition-slow) ease;
 }
-.delete-section { margin-top: 24px; padding-top: 16px; border-top: 1px solid #e2e8f0; }
+
+.admin-form-page h2 {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: var(--space-lg);
+}
+
+.delete-section {
+  margin-top: var(--space-xl);
+  padding-top: var(--space-lg);
+  border-top: 1px solid var(--color-border);
+}
+
 .btn-delete {
-  padding: 8px 24px;
-  background: white;
-  color: #dc2626;
-  border: 1px solid #fecaca;
-  border-radius: 6px;
+  padding: 10px 24px;
+  background: var(--color-surface);
+  color: var(--color-danger);
+  border: 1px solid var(--color-danger-bg);
+  border-radius: var(--radius-md);
   cursor: pointer;
   font-size: 14px;
+  font-weight: 500;
+  transition: all var(--transition-fast);
 }
-.btn-delete:hover { background: #fef2f2; }
-.admin-form-page h2 {
-  font-size: 22px;
-  color: #1e293b;
-  margin-bottom: 20px;
+
+.btn-delete:hover {
+  background: var(--color-danger-bg);
+  box-shadow: var(--shadow-sm);
 }
 </style>

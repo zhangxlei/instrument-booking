@@ -15,12 +15,13 @@
 
 <style scoped>
 .app-footer {
-  background: #1e293b;
-  color: #94a3b8;
+  background: var(--color-text);
+  color: var(--color-text-muted);
   font-size: 13px;
-  padding: 12px 24px;
+  padding: var(--space-md) var(--space-lg);
   margin-top: auto;
 }
+
 .footer-content {
   max-width: 1200px;
   margin: 0 auto;
@@ -28,14 +29,19 @@
   justify-content: space-between;
   align-items: center;
 }
+
 .footer-contact a {
-  color: #94a3b8;
+  color: var(--color-text-muted);
   text-decoration: none;
+  transition: color var(--transition-fast);
 }
+
 .footer-contact a:hover {
   color: white;
 }
+
 .footer-sep {
-  margin: 0 8px;
+  margin: 0 var(--space-sm);
+  opacity: 0.5;
 }
 </style>

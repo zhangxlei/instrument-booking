@@ -64,58 +64,80 @@ onMounted(load)
 </script>
 
 <style scoped>
-.page-title {
-  font-size: 22px;
-  color: #1e293b;
-  margin-bottom: 16px;
+.my-bookings {
+  animation: fadeIn var(--transition-slow) ease;
 }
+
+.page-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: var(--space-lg);
+}
+
 .tabs {
   display: flex;
-  gap: 4px;
-  margin-bottom: 16px;
-  border-bottom: 1px solid #e2e8f0;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-lg);
+  border-bottom: 1px solid var(--color-border);
 }
+
 .tab {
-  padding: 8px 16px;
+  padding: var(--space-sm) var(--space-md);
   border: none;
   background: none;
   cursor: pointer;
   font-size: 14px;
-  color: #64748b;
-  border-bottom: 2px solid transparent;
-}
-.tab.active {
-  color: #3b82f6;
-  border-bottom-color: #3b82f6;
   font-weight: 500;
+  color: var(--color-text-secondary);
+  border-bottom: 2px solid transparent;
+  transition: all var(--transition-fast);
 }
+
+.tab:hover {
+  color: var(--color-primary);
+}
+
+.tab.active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+
 .booking-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--space-md);
 }
+
 .booking-card {
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md);
   cursor: pointer;
+  transition: all var(--transition-normal);
 }
+
 .booking-card:hover {
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-primary-light);
 }
+
 .booking-header {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-sm);
 }
+
 .booking-time {
   font-size: 14px;
-  color: #475569;
+  color: var(--color-text-secondary);
 }
+
 .booking-purpose {
-  margin: 8px 0 0;
+  margin: var(--space-sm) 0 0;
   font-size: 14px;
-  color: #64748b;
+  color: var(--color-text-muted);
 }
 </style>

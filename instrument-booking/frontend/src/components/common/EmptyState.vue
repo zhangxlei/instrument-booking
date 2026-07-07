@@ -17,20 +17,24 @@ defineProps<{
 <style scoped>
 .empty-state {
   text-align: center;
-  padding: 60px 20px;
-  color: #94a3b8;
+  padding: var(--space-2xl) var(--space-lg);
+  color: var(--color-text-muted);
 }
+
 .empty-icon {
   font-size: 48px;
-  margin-bottom: 12px;
+  margin-bottom: var(--space-md);
 }
+
 .empty-title {
   font-size: 16px;
-  font-weight: 500;
-  color: #64748b;
+  font-weight: 600;
+  color: var(--color-text-secondary);
 }
+
 .empty-desc {
   font-size: 14px;
-  margin-top: 8px;
+  margin-top: var(--space-sm);
+  color: var(--color-text-muted);
 }
 </style>

@@ -73,71 +73,130 @@ onMounted(load)
 </script>
 
 <style scoped>
+.admin-instruments {
+  animation: fadeIn var(--transition-slow) ease;
+}
+
 .page-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
+  margin-bottom: var(--space-lg);
 }
+
 .page-header h2 {
-  font-size: 22px;
-  color: #1e293b;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-text);
   margin: 0;
 }
+
 .header-actions {
   display: flex;
-  gap: 8px;
+  gap: var(--space-sm);
   align-items: center;
 }
+
 .btn-add {
-  padding: 8px 20px;
-  background: #3b82f6;
+  padding: 10px 20px;
+  background: var(--color-primary);
   color: white;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   cursor: pointer;
   font-weight: 500;
+  transition: all var(--transition-fast);
 }
+
+.btn-add:hover {
+  background: var(--color-primary-dark);
+  box-shadow: var(--shadow-md);
+}
+
 .btn-export {
-  padding: 8px 20px;
-  background: white;
-  color: #3b82f6;
-  border: 1px solid #3b82f6;
-  border-radius: 6px;
+  padding: 10px 20px;
+  background: var(--color-surface);
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-md);
   text-decoration: none;
   font-size: 14px;
   font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
 }
+
+.btn-export:hover {
+  background: var(--color-primary-50);
+}
+
 .data-table {
   width: 100%;
-  border-collapse: collapse;
-  background: white;
-  border-radius: 8px;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
   overflow: hidden;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-border);
 }
+
 .data-table th {
-  background: #f8fafc;
-  padding: 10px 16px;
+  background: var(--color-bg);
+  padding: 14px 16px;
   text-align: left;
-  font-size: 13px;
-  color: #64748b;
+  font-size: 12px;
+  color: var(--color-text-secondary);
   font-weight: 600;
-  border-bottom: 1px solid #e2e8f0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--color-border);
 }
+
 .data-table td {
-  padding: 10px 16px;
+  padding: 14px 16px;
   font-size: 14px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--color-border-light);
 }
+
+.data-table tbody tr {
+  transition: background var(--transition-fast);
+}
+
+.data-table tbody tr:hover {
+  background: var(--color-primary-50);
+}
+
+.data-table tbody tr:nth-child(even) {
+  background: var(--color-bg);
+}
+
+.data-table tbody tr:nth-child(even):hover {
+  background: var(--color-primary-50);
+}
+
 .status-badge {
   font-size: 12px;
-  padding: 2px 8px;
-  border-radius: 10px;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-weight: 500;
 }
-.status-badge.available { background: #dcfce7; color: #166534; }
-.status-badge.maintenance { background: #fef9c3; color: #854d0e; }
-.status-badge.retired { background: #f1f5f9; color: #64748b; }
-.clickable-row { cursor: pointer; }
-.clickable-row:hover { background: #f8fafc; }
+
+.status-badge.available { 
+  background: var(--color-success-bg); 
+  color: #047857; 
+}
+
+.status-badge.maintenance { 
+  background: var(--color-warning-bg); 
+  color: #B45309; 
+}
+
+.status-badge.retired { 
+  background: var(--color-bg); 
+  color: var(--color-text-secondary); 
+}
+
+.clickable-row {
+  cursor: pointer;
+}
 </style>

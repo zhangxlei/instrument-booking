@@ -127,24 +127,144 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.detail-page { max-width: 600px; }
-.btn-back { background: none; border: none; color: #3b82f6; cursor: pointer; font-size: 14px; padding: 0; margin-bottom: 16px; }
-.detail-card { background: white; border-radius: 8px; padding: 24px; border: 1px solid #e2e8f0; }
-.detail-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
-.detail-header h1 { font-size: 20px; margin: 0; color: #1e293b; }
-.detail-info { display: flex; flex-direction: column; gap: 10px; }
-.info-row { font-size: 14px; color: #475569; }
-.label { color: #94a3b8; margin-right: 8px; }
-.reject { color: #dc2626; }
-.detail-section { margin-bottom: 16px; }
-.detail-section h3 { font-size: 14px; color: #475569; margin: 0 0 8px; }
-.actions { margin-top: 20px; padding-top: 16px; border-top: 1px solid #f1f5f9; }
-.btn-cancel { padding: 8px 20px; border: 1px solid #fecaca; color: #dc2626; background: white; border-radius: 6px; cursor: pointer; font-size: 14px; }
-.error-msg { text-align: center; color: #dc2626; padding: 48px; }
-.no-data { color: #94a3b8; font-size: 13px; padding: 8px 0; }
-.doc-item { font-size: 13px; padding: 4px 0; }
-.doc-item a { color: #3b82f6; text-decoration: none; }
-.doc-size { color: #94a3b8; font-size: 12px; }
-.upload-area { margin-top: 8px; }
-.upload-area input { font-size: 13px; }
+.detail-page {
+  max-width: 600px;
+  animation: fadeIn var(--transition-slow) ease;
+}
+
+.btn-back {
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 0;
+  margin-bottom: var(--space-md);
+  transition: color var(--transition-fast);
+}
+
+.btn-back:hover {
+  color: var(--color-primary-dark);
+  text-decoration: underline;
+}
+
+.detail-card {
+  background: var(--color-surface);
+  border-radius: var(--radius-xl);
+  padding: var(--space-xl);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+}
+
+.detail-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+
+.detail-header h1 {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--color-text);
+}
+
+.detail-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.info-row {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+.label {
+  color: var(--color-text-muted);
+  margin-right: var(--space-sm);
+  font-weight: 500;
+}
+
+.reject {
+  color: var(--color-danger);
+}
+
+.detail-section {
+  margin-bottom: var(--space-lg);
+}
+
+.detail-section h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  margin: 0 0 var(--space-sm);
+}
+
+.actions {
+  margin-top: var(--space-lg);
+  padding-top: var(--space-lg);
+  border-top: 1px solid var(--color-border-light);
+}
+
+.btn-cancel {
+  padding: 10px 24px;
+  border: 1px solid var(--color-danger-bg);
+  color: var(--color-danger);
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all var(--transition-fast);
+}
+
+.btn-cancel:hover {
+  background: var(--color-danger-bg);
+  box-shadow: var(--shadow-sm);
+}
+
+.error-msg {
+  text-align: center;
+  color: var(--color-danger);
+  padding: var(--space-2xl);
+}
+
+.no-data {
+  color: var(--color-text-muted);
+  font-size: 13px;
+  padding: var(--space-sm) 0;
+}
+
+.doc-item {
+  font-size: 13px;
+  padding: var(--space-xs) 0;
+}
+
+.doc-item a {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color var(--transition-fast);
+}
+
+.doc-item a:hover {
+  color: var(--color-primary-dark);
+  text-decoration: underline;
+}
+
+.doc-size {
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+.upload-area {
+  margin-top: var(--space-sm);
+}
+
+.upload-area input {
+  font-size: 13px;
+}
 </style>

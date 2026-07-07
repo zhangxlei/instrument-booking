@@ -15,22 +15,26 @@ defineProps<{ text?: string }>()
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 48px 0;
+  padding: var(--space-2xl) 0;
 }
+
 .spinner {
-  width: 36px;
-  height: 36px;
-  border: 3px solid #e2e8f0;
-  border-top-color: #3b82f6;
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
+
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
 .loading-text {
-  margin-top: 12px;
-  color: #64748b;
+  margin-top: var(--space-md);
+  color: var(--color-text-secondary);
   font-size: 14px;
+  font-weight: 500;
 }
 </style>

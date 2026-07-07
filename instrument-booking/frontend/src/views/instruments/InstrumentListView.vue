@@ -75,36 +75,52 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.instrument-list-page {
+  animation: fadeIn var(--transition-slow) ease;
+}
+
 .page-title {
-  font-size: 22px;
-  color: #1e293b;
-  margin-bottom: 20px;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: var(--space-lg);
 }
+
 .notice-board {
-  background: #fffbeb;
-  border: 1px solid #fde68a;
-  border-radius: 8px;
-  padding: 12px 16px;
-  margin-bottom: 20px;
+  background: var(--color-warning-bg);
+  border: 1px solid var(--color-warning);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md);
+  margin-bottom: var(--space-lg);
 }
+
 .notice-header {
   font-size: 15px;
   font-weight: 600;
-  color: #92400e;
-  margin-bottom: 8px;
+  color: #B45309;
+  margin-bottom: var(--space-sm);
 }
+
 .notice-item {
   font-size: 13px;
-  color: #78350f;
-  padding: 4px 0;
+  color: #92400e;
+  padding: var(--space-xs) 0;
   display: flex;
-  gap: 12px;
+  gap: var(--space-md);
 }
-.notice-title { font-weight: 500; white-space: nowrap; }
-.notice-content { color: #92400e; }
+
+.notice-title {
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.notice-content {
+  color: #B45309;
+}
+
 .instrument-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: var(--space-md);
 }
 </style>
